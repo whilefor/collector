@@ -1,7 +1,10 @@
 {
   "name": "collector",
   "version": "0.0.3",
-  "main": ["collector.js,collector.css"],
+  "main": [
+    "collector.js",
+    "collector.css"
+  ],
   "authors": [
     "whilefor <469676693@qq.com>"
   ],
