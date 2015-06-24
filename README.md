@@ -1,7 +1,5 @@
 # collector
 
-[![Build Status](https://github.com/whilefor/collector)](https://github.com/whilefor/collector)
-
 `collector.js` is a JavaScript library
 You can drag everything into it, also do every things you want, I'm still working on it.
 
