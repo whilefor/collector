@@ -19,5 +19,16 @@
     "bower_components",
     "test",
     "tests"
-  ]
+  ],
+  "homepage": "https://github.com/whilefor/collector",
+  "_release": "f8de976e57",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "f8de976e57bc036012926b2c44b33a3889001363"
+  },
+  "_source": "git://github.com/whilefor/collector.git",
+  "_target": "*",
+  "_originalSource": "collector",
+  "_direct": true
 }
