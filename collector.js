@@ -196,7 +196,7 @@
             console.error("element of options not found");
         }
     };
-    Collector.prototype = {
+    c.prototype = {
         _init: function (){
             this.scale = this._options.minScale;
             this.scaling = this._options.scaling;
@@ -513,7 +513,7 @@
             return event.pageY;
         }
     };
-    Collector.prototype.constructor = Collector;
+    c.prototype.constructor = c;
 
     function isWapperElement (elem){
         if(hasClass(elem,'c-wapper')){
