@@ -5,21 +5,6 @@
     "./collector.js",
     "./collector.css"
   ],
-  "authors": [
-    "whilefor <469676693@qq.com>"
-  ],
-  "description": "a JavaScript library to build your zone",
-  "keywords": [
-    "collector"
-  ],
-  "license": "MIT",
-  "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "test",
-    "tests"
-  ],
   "homepage": "https://github.com/whilefor/collector",
   "_release": "f8de976e57",
   "_resolution": {
