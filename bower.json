@@ -2,8 +2,8 @@
   "name": "collector",
   "version": "0.0.4",
   "main": [
-    "collector.js",
-    "collector.css"
+    "./collector.js",
+    "./collector.css"
   ],
   "authors": [
     "whilefor <469676693@qq.com>"
