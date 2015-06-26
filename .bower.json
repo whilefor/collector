@@ -5,6 +5,7 @@
     "./collector.js",
     "./collector.css"
   ],
+  "dependencies": {},
   "homepage": "https://github.com/whilefor/collector",
   "_release": "f8de976e57",
   "_resolution": {
@@ -14,6 +15,5 @@
   },
   "_source": "git://github.com/whilefor/collector.git",
   "_target": "*",
-  "_originalSource": "collector",
-  "_direct": true
+  "_originalSource": "collector"
 }
