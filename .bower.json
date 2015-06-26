@@ -5,6 +5,7 @@
     "./collector.js",
     "./collector.css"
   ],
+  "ignore": [],
   "dependencies": {},
   "homepage": "https://github.com/whilefor/collector",
   "_release": "f8de976e57",

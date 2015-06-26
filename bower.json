@@ -5,7 +5,8 @@
     "./collector.js",
     "./collector.css"
   ],
+  "ignore": [],
   "dependencies": {
-    
+
   }   
 }
