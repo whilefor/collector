@@ -222,6 +222,8 @@
         _onScale: function(event){
             var e = EventUtil.getEvent(event),
                 delta = EventUtil.getWheelDelta(event);
+            e.preventDefault();
+            e.stopPropagation();
 
             var wapperElement = this.wapperElement,
                 dashboardElement = this.dashboardElement,

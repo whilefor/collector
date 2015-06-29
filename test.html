@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>collector test</title>
+	<link rel="stylesheet" type="text/css" href="./collector.css">
+	<style type="text/css">
+		.collector{width: 800px; height: 400px; overflow: hidden; float:left;}
+
+		.widgets-list{ float: left; }
+	</style>
+</head>
+<body>
+
+
+	<div class="collector"></div>
+
+	<h3>Dragable elements</h3>
+	<ul class="widgets-list">
+		<li class="widget-text">copy text</div>
+		<li class="widget-link"><a href="#">www.abc.com</a></div>
+		<li class="widget-img"><img src="./assets/images/dragImg.png" width="100" height="100" /></div>
+	</ul>
+
+
+</body>
+<script type="text/javascript" src="./collector.js"></script>
+<script type="text/javascript">
+    var test = new collector(".collector", {
+      width:"10000px",
+      height:"10000px",
+      maxScale:1,    //正常尺寸
+      minScale:0.1,  //最小尺寸
+      scaling:0.05   //放大缩小增量
+    });
+</script>
+</html>
