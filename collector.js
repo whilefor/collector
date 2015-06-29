@@ -61,89 +61,6 @@
             }
         };
 
-    function isElement (obj) {
-        return !!(obj && obj.nodeType === 1);
-    }
-    function isHTMLCollection (obj) {
-        if(obj.toString()== '[object HTMLCollection]' || 
-           obj.toString()== '[object NodeList]' ){
-            return true;
-        }
-        return false;
-    }
-    function isWindow (thing) { return !!(thing && thing.Window) && (thing instanceof thing.Window); }
-    function isDocFrag (thing) { return !!thing && thing instanceof DocumentFragment; }
-    function isArray (thing) {
-        return isObject(thing)
-                && (typeof thing.length !== undefined)
-                && isFunction(thing.splice);
-    }
-    function isObject   (thing) { return !!thing && (typeof thing === 'object'); }
-    function isFunction (thing) { return typeof thing === 'function'; }
-    function isNumber   (thing) { return typeof thing === 'number'  ; }
-    function isBool     (thing) { return typeof thing === 'boolean' ; }
-    function isString   (thing) { return typeof thing === 'string'  ; }
-    function isSelector (value) {
-        if (!isString(value)) { return false; }
-
-        // an exception will be raised if it is invalid
-        document.querySelector(value);
-        return true;
-    }
-    function mergeObj() {
-        var options,
-            name,
-            src,
-            copy,
-            copyIsArray,
-            clone,
-            target = arguments[0] || {},
-            i = 1,
-            length = arguments.length,
-            deep = false;
-     
-        // Handle a deep copy situation
-        if ( typeof target === "boolean" ) {
-            deep = target;
-            target = arguments[1] || {};
-            // skip the boolean and the target
-            i = 2;
-        }
-     
-        // Handle case when target is a string or something (possible in deep copy)
-        if ( typeof target !== "object" ) {
-            target = {};
-        }
-     
-        // 如果只有一个参数，那将意味着对jquery自身进行扩展
-        if ( length === i ) {
-            target = this;
-            --i;
-        }
-     
-        for ( ; i < length; i++ ) {
-            // Only deal with non-null/undefined values
-            if ( (options = arguments[ i ]) != null ) {
-                // Extend the base object
-                for ( name in options ) {
-                    src = target[ name ];
-                    copy = options[ name ];
-     
-                    // Prevent never-ending loop
-                    if ( target === copy ) {
-                        continue;
-                    }
-     
-                    if ( copy !== undefined ) {
-                        target[ name ] = copy;
-                    }
-                }
-            }
-        }
-     
-        // Return the modified object
-        return target;
-    };
     function collector (element, options) {
         return new c(element, options);
     }
@@ -215,9 +132,36 @@
             this.element.appendChild(collectorElements.wapperElement);
 
             //bind Event
+            //widget dragable
             EventUtil.addHandler(this.element, "mousewheel", this._onScale.bind(this) );
             EventUtil.addHandler(this.element, "mousedown",  this._onDashboardDrag.bind(this) );
             EventUtil.addHandler(this.element, "mousedown",  this._onWidgetDrag.bind(this) );
+
+            //draggable element into dashboard
+            EventUtil.addHandler(this.element, "dragenter", this._onElementDragenter.bind(this) );
+            EventUtil.addHandler(this.element, "dragover",  this._onElementDragover.bind(this) );
+            EventUtil.addHandler(this.element, "drop",      this._onElementDrop.bind(this) );
+            EventUtil.addHandler(this.element, "dragleave", this._onElementDragleave.bind(this) );
+        },
+        _onElementDragenter: function(event){
+            var e = EventUtil.getEvent(event);
+            e.preventDefault();
+            e.stopPropagation();
+        },
+        _onElementDragover: function(event){
+            var e = EventUtil.getEvent(event);
+            e.preventDefault();
+            e.stopPropagation();
+        },
+        _onElementDrop: function(event){
+            var e = EventUtil.getEvent(event);
+            e.preventDefault();
+            e.stopPropagation();
+        },
+        _onElementDragleave: function(event){
+            var e = EventUtil.getEvent(event);
+            e.preventDefault();
+            e.stopPropagation();
         },
         _onScale: function(event){
             var e = EventUtil.getEvent(event),
@@ -590,6 +534,90 @@
             'dashboardElement':dashboardElement
             };
     }
+
+    function isElement (obj) {
+        return !!(obj && obj.nodeType === 1);
+    }
+    function isHTMLCollection (obj) {
+        if(obj.toString()== '[object HTMLCollection]' || 
+           obj.toString()== '[object NodeList]' ){
+            return true;
+        }
+        return false;
+    }
+    function isWindow (thing) { return !!(thing && thing.Window) && (thing instanceof thing.Window); }
+    function isDocFrag (thing) { return !!thing && thing instanceof DocumentFragment; }
+    function isArray (thing) {
+        return isObject(thing)
+                && (typeof thing.length !== undefined)
+                && isFunction(thing.splice);
+    }
+    function isObject   (thing) { return !!thing && (typeof thing === 'object'); }
+    function isFunction (thing) { return typeof thing === 'function'; }
+    function isNumber   (thing) { return typeof thing === 'number'  ; }
+    function isBool     (thing) { return typeof thing === 'boolean' ; }
+    function isString   (thing) { return typeof thing === 'string'  ; }
+    function isSelector (value) {
+        if (!isString(value)) { return false; }
+
+        // an exception will be raised if it is invalid
+        document.querySelector(value);
+        return true;
+    }
+    function mergeObj() {
+        var options,
+            name,
+            src,
+            copy,
+            copyIsArray,
+            clone,
+            target = arguments[0] || {},
+            i = 1,
+            length = arguments.length,
+            deep = false;
+     
+        // Handle a deep copy situation
+        if ( typeof target === "boolean" ) {
+            deep = target;
+            target = arguments[1] || {};
+            // skip the boolean and the target
+            i = 2;
+        }
+     
+        // Handle case when target is a string or something (possible in deep copy)
+        if ( typeof target !== "object" ) {
+            target = {};
+        }
+     
+        // 如果只有一个参数，那将意味着对jquery自身进行扩展
+        if ( length === i ) {
+            target = this;
+            --i;
+        }
+     
+        for ( ; i < length; i++ ) {
+            // Only deal with non-null/undefined values
+            if ( (options = arguments[ i ]) != null ) {
+                // Extend the base object
+                for ( name in options ) {
+                    src = target[ name ];
+                    copy = options[ name ];
+     
+                    // Prevent never-ending loop
+                    if ( target === copy ) {
+                        continue;
+                    }
+     
+                    if ( copy !== undefined ) {
+                        target[ name ] = copy;
+                    }
+                }
+            }
+        }
+     
+        // Return the modified object
+        return target;
+    };
 
     var client = function(){
 
