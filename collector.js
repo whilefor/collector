@@ -163,27 +163,52 @@
             e.preventDefault();
             e.stopPropagation();
 
+            var wapperElement    = this.wapperElement,
+                dashboardElement = this.dashboardElement,
+                element          = this.element;
+
             var dataTransfer = e.dataTransfer;
             dataTransfer.effectAllowed = "copy";
             var url  = dataTransfer.getData("text/uri-list");
             var text = dataTransfer.getData("text/plain");
             var html = dataTransfer.getData("text/html");
 
+            var fileWidget = null,
+                urlWidget  = null,
+                textWidget = null,
+                htmlWidget = null;
             if(dataTransfer.files.length > 0){
                 console.log('files:',dataTransfer.files);
+                //fileWidget = this._createFileWidget(dataTransfer.files);
                 return;
             }
-            if(url){
+            else if(url){
                 console.log('url:',url);
+                //urlWidget = this._createUrlWidget(url);
+                return;
             }
             else if(text){
                 console.log('text',text);
+                //textWidget = this._createTextWidget(text);
+                return;
             }
             else if(html){
                 console.log('html',html);
+                //htmlWidget = this._createHtmlWidget(html);
+                return;
             }
-            
+        },
+        _createFileWidget: function(files){
 
+        },
+        _createUrlWidget: function(url){
+            
+        },
+        _createTextWidget: function(text){
+            
+        },
+        _createHtmlWidget: function(html){
+            
         },
         _onElementDragleave: function(event){
             var e = EventUtil.getEvent(event);
