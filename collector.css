@@ -15,3 +15,10 @@
 	height: 300px;
 	background-color: #123;
 }
+
+.c-dragover{
+
+}
+.c-dragover .c-wapper{
+  opacity: 0.5;
+}

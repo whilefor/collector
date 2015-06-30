@@ -138,15 +138,20 @@
             EventUtil.addHandler(this.element, "mousedown",  this._onWidgetDrag.bind(this) );
 
             //draggable element into dashboard
-            EventUtil.addHandler(this.element, "dragenter", this._onElementDragenter.bind(this) );
+            EventUtil.addHandler(this.element, "dragenter", this._onElementDragenter);
             EventUtil.addHandler(this.element, "dragover",  this._onElementDragover.bind(this) );
+            EventUtil.addHandler(this.element, "drop",      function(){
+                removeClass(this,'c-dragover');
+            } );
             EventUtil.addHandler(this.element, "drop",      this._onElementDrop.bind(this) );
-            EventUtil.addHandler(this.element, "dragleave", this._onElementDragleave.bind(this) );
+            EventUtil.addHandler(this.element, "dragleave", this._onElementDragleave );
         },
         _onElementDragenter: function(event){
             var e = EventUtil.getEvent(event);
             e.preventDefault();
             e.stopPropagation();
+
+            addClass(this,'c-dragover');
         },
         _onElementDragover: function(event){
             var e = EventUtil.getEvent(event);
@@ -157,11 +162,34 @@
             var e = EventUtil.getEvent(event);
             e.preventDefault();
             e.stopPropagation();
+
+            var dataTransfer = e.dataTransfer;
+            dataTransfer.effectAllowed = "copy";
+            var url  = dataTransfer.getData("text/uri-list");
+            var text = dataTransfer.getData("text/plain");
+            var html = dataTransfer.getData("text/html");
+
+            if(dataTransfer.files.length > 0){
+                console.log('files:',dataTransfer.files);
+                return;
+            }
+            if(url){
+                console.log('url:',url);
+            }
+            else if(text){
+                console.log('text',text);
+            }
+            else if(html){
+                console.log('html',html);
+            }
+            
+
         },
         _onElementDragleave: function(event){
             var e = EventUtil.getEvent(event);
             e.preventDefault();
             e.stopPropagation();
+            removeClass(this,'c-dragover');
         },
         _onScale: function(event){
             var e = EventUtil.getEvent(event),
@@ -484,6 +512,17 @@
         return (
             " " + ((dom || {}).className || "").replace(/\s/g, " ") + " "
         ).indexOf(" " + className + " ") >= 0
+    }
+    //元素增加class
+    function addClass(ele, cls) { 
+        if (!hasClass(ele, cls)) ele.className += " "+cls;
+    }
+    //元素移除class
+    function removeClass(ele, cls) {
+        if (hasClass(ele, cls)) {
+            var reg = new RegExp('(\\s|^)'+cls+'(\\s|$)');
+            ele.className = ele.className.replace(reg, ' ');
+        }
     }
     function actDivision(arg1,arg2){
         var t1=0,t2=0,r1,r2;
