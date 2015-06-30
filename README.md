@@ -27,8 +27,8 @@ Create a new collector:
 
 ## Contributing
 
-It's me 
+Myself
 
 ## License
 
-For now you can do everything which you want
+MIT
