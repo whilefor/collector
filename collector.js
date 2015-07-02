@@ -173,41 +173,75 @@
             var text = dataTransfer.getData("text/plain");
             var html = dataTransfer.getData("text/html");
 
-            var fileWidget = null,
-                urlWidget  = null,
-                textWidget = null,
-                htmlWidget = null;
+            var widgets = null;
             if(dataTransfer.files.length > 0){
                 console.log('files:',dataTransfer.files);
-                //fileWidget = this._createFileWidget(dataTransfer.files);
+                widgets = this._createFileWidgets(dataTransfer.files);
+                //_putWidgetInDashboard(widget);
                 return;
             }
             else if(url){
                 console.log('url:',url);
-                //urlWidget = this._createUrlWidget(url);
+                //widgets = this._createUrlWidgets(url);
                 return;
             }
             else if(text){
                 console.log('text',text);
-                //textWidget = this._createTextWidget(text);
+                //widgets = this._createTextWidgets(text);
                 return;
             }
             else if(html){
                 console.log('html',html);
-                //htmlWidget = this._createHtmlWidget(html);
+                //widgets = this._createHtmlWidgets(html);
                 return;
             }
         },
-        _createFileWidget: function(files){
+        _putWidgetInDashboard: function(widgets){
+            this.dashboardElement.appendChild(widgets);
+        },
+        _createFileWidgets: function(files){
+            var widgets  = document.createDocumentFragment();
+            var self = this;
+            for(var i = 0; i < files.length; i++){
+                var file = files[i];
+                var fileReturn = function(file){
+                    return function(){
+                        //var file = file;
+                        self._uploadFile(file,function(data){
+                            var widget;
+                            widget = document.createElement('div');
+                            widget.className = 'c-widget c-widget-file';
+                            widget.style.width = '100px';
+                            widget.style.height = '100px';
 
+                            widget.innerHTML = "<p>File information: <strong>" + data.fileName +
+                                                "</strong> type: <strong>" + file.type +
+                                                "</strong> size: <strong>" + file.size +
+                                                "</strong> bytes</p>";
+
+                            if (file.type.indexOf("image") == 0) {
+                                widget.innerHTML += '<p><img src="' + data.realName + '" /></p>';
+                            }
+                            self.dashboardElement.appendChild(widget);
+                        });
+                    }();
+                }(file);
+
+
+            }
         },
-        _createUrlWidget: function(url){
+        _uploadFile: function(file,callback){
+            if(typeof callback ==="function"){
+                callback({fileName:'123',realName:"321"});
+            }
+        },
+        _createUrlWidgets: function(url){
             
         },
-        _createTextWidget: function(text){
+        _createTextWidgets: function(text){
             
         },
-        _createHtmlWidget: function(html){
+        _createHtmlWidgets: function(html){
             
         },
         _onElementDragleave: function(event){
@@ -312,7 +346,7 @@
 
             //var scaleRate = actDivision(this.multiple, this.scale);
             scaleRate = actDivision(1,this.scale);
-
+            console.log(target);
             if(isWidgetElement(target)){
                 target.offset_x = e.clientX * scaleRate - target.offsetLeft;
                 target.offset_y = e.clientY * scaleRate - target.offsetTop;
@@ -330,8 +364,8 @@
                 dashboardElement = this.dashboardElement,
                 element = this.element;
 
-            target.style.cursor = "pointer";
-            target.style.position = "absolute";
+            //target.style.cursor = "pointer";
+            //target.style.position = "absolute";
             var scaleSize = this.scale;
             //var scaleRate = actDivision(this.multiple,scaleSize);
             scaleRate = actDivision(1,this.scale);
