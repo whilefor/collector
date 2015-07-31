@@ -9,6 +9,7 @@
     //'use strict';
 
     var 
+        delegate           = window.delegate,
         document           = window.document,
         DocumentFragment   = window.DocumentFragment   || blank,
         SVGElement         = window.SVGElement         || blank,
@@ -135,7 +136,8 @@
             //widget dragable
             EventUtil.addHandler(this.element, "mousewheel", this._onScale.bind(this) );
             EventUtil.addHandler(this.element, "mousedown",  this._onDashboardDrag.bind(this) );
-            EventUtil.addHandler(this.element, "mousedown",  this._onWidgetDrag.bind(this) );
+            //EventUtil.addHandler(this.element, "mousedown",  this._onWidgetDrag.bind(this) );
+            delegate(this.element).on('mousedown', '.' + widget_className, this._onWidgetDrag.bind(this));
 
             //draggable element into dashboard
             EventUtil.addHandler(this.element, "dragenter", this._onElementDragenter);
@@ -341,12 +343,13 @@
             var wapperElement = this.wapperElement,
                 dashboardElement = this.dashboardElement,
                 element = this.element,
-                target = e.target;
-            this.target = e.target;
+                target = e.delegateTarget;
+            //传递给_onWidgetDraging和_onWidgetDragend
+            this.target = e.delegateTarget;
 
             //var scaleRate = actDivision(this.multiple, this.scale);
             scaleRate = actDivision(1,this.scale);
-            console.log(target);
+            console.log(e, target);
             if(isWidgetElement(target)){
                 target.offset_x = e.clientX * scaleRate - target.offsetLeft;
                 target.offset_y = e.clientY * scaleRate - target.offsetTop;
