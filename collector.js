@@ -134,8 +134,8 @@
             //bind Event
             //widget dragable
             EventUtil.addHandler(this.element, "mousewheel", this._onScale.bind(this) );
-            EventUtil.addHandler(this.element, "mousedown",  this._onDashboardDrag.bind(this) );
-            EventUtil.addHandler(this.element, "mousedown",  this._onWidgetDrag.bind(this) );
+            EventUtil.addHandler(this.element, "mousedown",  this._onDshboardDrag.bind(this) );
+            EventUtil.on(document, "mousedown", "." + widget_className, this._onWidgetDrag.bind(this) );
 
             //draggable element into dashboard
             EventUtil.addHandler(this.element, "dragenter", this._onElementDragenter);
@@ -341,8 +341,8 @@
             var wapperElement = this.wapperElement,
                 dashboardElement = this.dashboardElement,
                 element = this.element,
-                target = e.target;
-            this.target = e.target;
+                target = e.currentTarget;
+            this.target = e.currentTarget;
 
             //var scaleRate = actDivision(this.multiple, this.scale);
             scaleRate = actDivision(1,this.scale);
