@@ -17,9 +17,12 @@
         SVGElementInstance = window.SVGElementInstance || blank,
         HTMLElement        = window.HTMLElement        || window.Element,
 
-        wapper_className    = "c-wapper",
-        dashboard_className   = "c-dashboard",
-        widget_className         = "c-widget",
+        wapper_className    = " c-wapper",
+        dashboard_className   = " c-dashboard",
+        widget_className         = " c-widget",
+        file_widget_className    = " c-file-widget",
+        img_widget_className     = " c-img-widget",
+        txt_widget_className     = " c-txt-widget",
 
         PointerEvent = (window.PointerEvent || window.MSPointerEvent),
         pEventTypes,
@@ -137,7 +140,7 @@
             EventUtil.addHandler(this.element, "mousewheel", this._onScale.bind(this) );
             EventUtil.addHandler(this.element, "mousedown",  this._onDashboardDrag.bind(this) );
             //EventUtil.addHandler(this.element, "mousedown",  this._onWidgetDrag.bind(this) );
-            delegate(this.element).on('mousedown', '.' + widget_className, this._onWidgetDrag.bind(this));
+            delegate(this.element).on('mousedown', '.' + widget_className.trim(), this._onWidgetDrag.bind(this));
 
             //draggable element into dashboard
             EventUtil.addHandler(this.element, "dragenter", this._onElementDragenter);
@@ -178,63 +181,48 @@
             var widgets = null;
             if(dataTransfer.files.length > 0){
                 console.log('files:',dataTransfer.files);
-                widgets = this._createFileWidgets(dataTransfer.files);
+                this._createFileWidgets(dataTransfer.files);
                 //_putWidgetInDashboard(widget);
-                return;
+                //return;
             }
-            else if(url){
+            if(url){
                 console.log('url:',url);
                 //widgets = this._createUrlWidgets(url);
-                return;
+                //return;
             }
-            else if(text){
-                console.log('text',text);
+            if(text){
+                console.log('text:',text);
                 //widgets = this._createTextWidgets(text);
-                return;
+                //return;
             }
-            else if(html){
-                console.log('html',html);
+            if(html){
+                console.log('html:',html);
                 //widgets = this._createHtmlWidgets(html);
-                return;
+                //return;
             }
         },
         _putWidgetInDashboard: function(widgets){
             this.dashboardElement.appendChild(widgets);
         },
         _createFileWidgets: function(files){
-            var widgets  = document.createDocumentFragment();
             var self = this;
             for(var i = 0; i < files.length; i++){
                 var file = files[i];
-                var fileReturn = function(file){
-                    return function(){
-                        //var file = file;
-                        self._uploadFile(file,function(data){
-                            var widget;
-                            widget = document.createElement('div');
-                            widget.className = 'c-widget c-widget-file';
-                            widget.style.width = '100px';
-                            widget.style.height = '100px';
-
-                            widget.innerHTML = "<p>File information: <strong>" + data.fileName +
-                                                "</strong> type: <strong>" + file.type +
-                                                "</strong> size: <strong>" + file.size +
-                                                "</strong> bytes</p>";
-
-                            if (file.type.indexOf("image") == 0) {
-                                widget.innerHTML += '<p><img src="' + data.realName + '" /></p>';
-                            }
-                            self.dashboardElement.appendChild(widget);
-                        });
-                    }();
-                }(file);
-
-
+                self._uploadFile(file, function(data){
+                    var widget;
+                    widget = document.createElement('div');
+                    widget.className = widget_className + file_widget_className;
+                    widget.innerHTML = "<p>File information: <strong>" + data.fileName +
+                                        "</strong> type: <strong>" + file.type +
+                                        "</strong> size: <strong>" + file.size +
+                                        "</strong> bytes</p>";
+                    self._putWidgetInDashboard(widget);
+                });
             }
         },
         _uploadFile: function(file,callback){
             if(typeof callback ==="function"){
-                callback({fileName:'123',realName:"321"});
+                callback({fileName:'test',realName:"321"});
             }
         },
         _createUrlWidgets: function(url){
@@ -585,6 +573,10 @@
             var reg = new RegExp('(\\s|^)'+cls+'(\\s|$)');
             ele.className = ele.className.replace(reg, ' ');
         }
+    }
+    //删除左右两端的空格
+    String.prototype.trim = function(){
+         return this.replace(/(^\s*)|(\s*$)/g, "");
     }
     function actDivision(arg1,arg2){
         var t1=0,t2=0,r1,r2;
