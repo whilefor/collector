@@ -37,7 +37,7 @@ Create a new collector:
 
 ## Contributing
 
-Myself
+Whilefor
 
 ## License
 
