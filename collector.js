@@ -180,15 +180,12 @@
 
             var widgets = null;
             if(dataTransfer.files.length > 0){
-                console.log('files:',dataTransfer.files);
                 this._createFileWidgets(dataTransfer.files);
-                //_putWidgetInDashboard(widget);
-                //return;
+                return;
             }
             if(url){
-                console.log('url:',url);
-                //widgets = this._createUrlWidgets(url);
-                //return;
+                this._createUrlWidgets(url);
+                return;
             }
             if(text){
                 console.log('text:',text);
@@ -226,7 +223,15 @@
             }
         },
         _createUrlWidgets: function(url){
-            
+            var widget;
+            //url
+            if(url){
+                widget = document.createElement('div');
+                widget.className = widget_className + txt_widget_className;
+                widget.innerHTML = "<p>" + url + "</p>";
+                this._putWidgetInDashboard(widget);
+            }
+            //img
         },
         _createTextWidgets: function(text){
             
