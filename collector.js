@@ -118,6 +118,7 @@
         }
     };
     c.prototype = {
+        _widgetsArray:[],
         _init: function (){
             this.scale = this._options.minScale;
             this.scaling = this._options.scaling;
@@ -125,7 +126,8 @@
             this.maxScale = this._options.maxScale;
 
             var width = this._options.width,
-                height = this._options.height;
+                height = this._options.height,
+                widgetSelector = '.' + widget_className.trim();
 
             //create html elements
             var collectorElements = createCollectorTemplate(width,height,this.minScale);
@@ -139,8 +141,10 @@
             //widget dragable
             EventUtil.addHandler(this.element, "mousewheel", this._onScale.bind(this) );
             EventUtil.addHandler(this.element, "mousedown",  this._onDashboardDrag.bind(this) );
-            //EventUtil.addHandler(this.element, "mousedown",  this._onWidgetDrag.bind(this) );
-            delegate(this.element).on('mousedown', '.' + widget_className.trim(), this._onWidgetDrag.bind(this));
+            delegate(this.element).on('mousedown', widgetSelector, this._onWidgetDrag.bind(this));
+
+            //widget active
+            delegate(this.element).on('click', widgetSelector, this._onWidgetActive.bind(this));
 
             //draggable element into dashboard
             EventUtil.addHandler(this.element, "dragenter", this._onElementDragenter);
@@ -150,6 +154,17 @@
             } );
             EventUtil.addHandler(this.element, "drop",      this._onElementDrop.bind(this) );
             EventUtil.addHandler(this.element, "dragleave", this._onElementDragleave );
+        },
+        _onWidgetActive: function(event){
+            var e = EventUtil.getEvent(event);
+            e.preventDefault();
+            e.stopPropagation();
+
+            for(var i=0; i<this._widgetsArray.length; i++){
+                var widget = thi._widgetsArray[i];
+                removeClass(widget, 'c-widget-active');
+            }
+            //addClass();
         },
         _onElementDragenter: function(event){
             var e = EventUtil.getEvent(event);
@@ -198,8 +213,9 @@
                 //return;
             }
         },
-        _putWidgetInDashboard: function(widgets){
-            this.dashboardElement.appendChild(widgets);
+        _putWidgetInDashboard: function(widget){
+            this.dashboardElement.appendChild(widget);
+            this._widgetsArray.push(widget);
         },
         _createFileWidgets: function(files){
             var self = this;
@@ -562,6 +578,8 @@
         }
         return false;
     }
+
+    //判断是否有该class
     function hasClass(dom, className) {
         className = className.replace(/^\s|\s$/g, "")
         return (
