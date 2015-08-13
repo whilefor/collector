@@ -129,15 +129,14 @@
                 height = this._options.height,
                 widgetSelector = '.' + widget_className.trim();
 
-            //create html elements
+            //create elements
             var collectorElements = createCollectorTemplate(width,height,this.minScale);
             this.wapperElement    = collectorElements.wapperElement;
             this.dashboardElement = collectorElements.dashboardElement;
 
-            //render, put the wapper element into the selected element
+            //put the wapper element into the selected element
             this.element.appendChild(collectorElements.wapperElement);
 
-            //bind Event
             //widget dragable
             EventUtil.addHandler(this.element, "mousewheel", this._onScale.bind(this) );
             EventUtil.addHandler(this.element, "mousedown",  this._onDashboardDrag.bind(this) );
@@ -146,14 +145,11 @@
             //widget active
             delegate(this.element).on('click', widgetSelector, this._onWidgetActive.bind(this));
 
-            //draggable element into dashboard
-            EventUtil.addHandler(this.element, "dragenter", this._onElementDragenter);
-            EventUtil.addHandler(this.element, "dragover",  this._onElementDragover.bind(this) );
-            EventUtil.addHandler(this.element, "drop",      function(){
-                removeClass(this,'c-dragover');
-            } );
-            EventUtil.addHandler(this.element, "drop",      this._onElementDrop.bind(this) );
-            EventUtil.addHandler(this.element, "dragleave", this._onElementDragleave );
+            //widget into dashboard
+            EventUtil.addHandler(this.element, "dragenter", this._onElementDragenter.bind(this));
+            EventUtil.addHandler(this.element, "dragover",  this._onElementDragover.bind(this));
+            EventUtil.addHandler(this.element, "drop",      this._onElementDrop.bind(this));
+            EventUtil.addHandler(this.element, "dragleave", this._onElementDragleave.bind(this));
         },
         _onWidgetActive: function(event){
             var e = EventUtil.getEvent(event);
@@ -161,7 +157,7 @@
             e.stopPropagation();
 
             for(var i=0; i<this._widgetsArray.length; i++){
-                var widget = thi._widgetsArray[i];
+                var widget = this._widgetsArray[i];
                 removeClass(widget, 'c-widget-active');
             }
             //addClass();
@@ -170,19 +166,22 @@
             var e = EventUtil.getEvent(event);
             e.preventDefault();
             e.stopPropagation();
-
-            addClass(this,'c-dragover');
+            addClass(this.element, 'c-dragover');
         },
         _onElementDragover: function(event){
             var e = EventUtil.getEvent(event);
             e.preventDefault();
             e.stopPropagation();
+            if(!hasClass(this.element, 'c-dragover')){
+                addClass(this.element, 'c-dragover');
+            }
         },
         _onElementDrop: function(event){
             var e = EventUtil.getEvent(event);
             e.preventDefault();
             e.stopPropagation();
 
+            removeClass(this.element, 'c-dragover');
             var wapperElement    = this.wapperElement,
                 dashboardElement = this.dashboardElement,
                 element          = this.element;
@@ -212,6 +211,12 @@
                 //widgets = this._createHtmlWidgets(html);
                 //return;
             }
+        },
+        _onElementDragleave: function(event){
+            var e = EventUtil.getEvent(event);
+            e.preventDefault();
+            e.stopPropagation();
+            removeClass(this.element,'c-dragover');
         },
         _putWidgetInDashboard: function(widget){
             this.dashboardElement.appendChild(widget);
@@ -254,12 +259,6 @@
         },
         _createHtmlWidgets: function(html){
             
-        },
-        _onElementDragleave: function(event){
-            var e = EventUtil.getEvent(event);
-            e.preventDefault();
-            e.stopPropagation();
-            removeClass(this,'c-dragover');
         },
         _onScale: function(event){
             var e = EventUtil.getEvent(event),
