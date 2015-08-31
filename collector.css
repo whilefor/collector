@@ -3,6 +3,10 @@
   transform-origin:0px 0px;
   display:block;
   background-color: #999;
+    -webkit-user-select:none;
+    -moz-user-select:none;
+    -ms-user-select:none;
+    user-select:none;
 }
 .c-dashboard{
   position:absolute;
@@ -26,5 +30,5 @@
 }
 
 .c-widget-active{
-  
+  background-color: #123;
 }

@@ -9,7 +9,7 @@
     //'use strict';
 
     var 
-        delegate           = window.delegate,
+        $                  = window.jQuery,
         document           = window.document,
         DocumentFragment   = window.DocumentFragment   || blank,
         SVGElement         = window.SVGElement         || blank,
@@ -23,6 +23,7 @@
         file_widget_className    = " c-file-widget",
         img_widget_className     = " c-img-widget",
         txt_widget_className     = " c-txt-widget",
+        url_widget_className     = " c-url-widget",
 
         PointerEvent = (window.PointerEvent || window.MSPointerEvent),
         pEventTypes,
@@ -65,26 +66,26 @@
             }
         };
 
-    function collector (element, options) {
-        return new c(element, options);
+    function collector (selector, options) {
+        return new c(selector, options);
     }
 
-    function c (element ,options) {
+    function c (selector ,options) {
         //参数赋值
         var options = options;
         if(!options){
             options = defaultOptions.base;
         }
         else{
-            options = mergeObj(defaultOptions.base, options);
+            options = $.extend(defaultOptions.base, options);
         }
 
         //----------------处理选择器-----------------//
         //------暂时只支持匹配选择器的第一个元素-----//
-        if (isSelector(element)) {           //".collection" || "#collection"
-            this._selector = element;
+        if ($(selector).length > 0) {           //".collection" || "#collection"
+            this._selector = selector;
             //返回匹配指定选择器的第一个元素
-            this.element  = document.querySelector(element);
+            this.$targetElement = $($(selector).get(0));
         }
         else{
             //单Node节点
@@ -110,7 +111,7 @@
 
 
         //----------------初始化-----------------//
-        if(this.element){
+        if(this.$targetElement){
             this._init();
         }
         else{
@@ -119,74 +120,77 @@
     };
     c.prototype = {
         _widgetsArray:[],
+        $activeWidget:null,
         _init: function (){
             this.scale = this._options.minScale;
             this.scaling = this._options.scaling;
             this.minScale = this._options.minScale;
             this.maxScale = this._options.maxScale;
+            var $targetElement = this.$targetElement;
 
             var width = this._options.width,
                 height = this._options.height,
-                widgetSelector = '.' + widget_className.trim();
+                widgetSelector = '.' + widget_className.trim(),
+                dashboardSelector = '.' + dashboard_className.trim();
 
             //create elements
             var collectorElements = createCollectorTemplate(width,height,this.minScale);
-            this.wapperElement    = collectorElements.wapperElement;
-            this.dashboardElement = collectorElements.dashboardElement;
+            this.$wapperElement    = collectorElements.wapperElement;
+            this.$dashboardElement = collectorElements.dashboardElement;
 
             //put the wapper element into the selected element
-            this.element.appendChild(collectorElements.wapperElement);
+            this.$targetElement.append(collectorElements.wapperElement);
 
             //widget dragable
-            EventUtil.addHandler(this.element, "mousewheel", this._onScale.bind(this) );
-            EventUtil.addHandler(this.element, "mousedown",  this._onDashboardDrag.bind(this) );
-            delegate(this.element).on('mousedown', widgetSelector, this._onWidgetDrag.bind(this));
+            $targetElement.on('mousewheel', this._onScale.bind(this));
+            $targetElement.on('mousedown', this._onDashboardDrag.bind(this));
+            $targetElement.on('mousedown', widgetSelector, this._onWidgetDrag.bind(this));
 
             //widget active
-            delegate(this.element).on('click', widgetSelector, this._onWidgetActive.bind(this));
+            $targetElement.on('click', widgetSelector, this._onWidgetActive.bind(this));
 
-            //widget into dashboard
-            EventUtil.addHandler(this.element, "dragenter", this._onElementDragenter.bind(this));
-            EventUtil.addHandler(this.element, "dragover",  this._onElementDragover.bind(this));
-            EventUtil.addHandler(this.element, "drop",      this._onElementDrop.bind(this));
-            EventUtil.addHandler(this.element, "dragleave", this._onElementDragleave.bind(this));
+            //drag widget into dashboard
+            $targetElement.on('dragenter',  this._onElementDragenter.bind(this));
+            $targetElement.on('dragover',   this._onElementDragover.bind(this));
+            $targetElement.on('drop',       this._onElementDrop.bind(this));
+            $targetElement.on('dragleave',  this._onElementDragleave.bind(this));
         },
         _onWidgetActive: function(event){
-            var e = EventUtil.getEvent(event);
-            e.preventDefault();
-            e.stopPropagation();
+            event.preventDefault();
+            event.stopPropagation();
+            this.$activeWidget ? this.$activeWidget.removeClass('c-widget-active') : '';
+            $(event.target).addClass('c-widget-active');
+            this.$activeWidget = $(event.target);
 
-            for(var i=0; i<this._widgetsArray.length; i++){
-                var widget = this._widgetsArray[i];
-                removeClass(widget, 'c-widget-active');
-            }
-            //addClass();
+            // var menu = document.createElement('div');
+            // menu.className = "c-widget-menu";
+            // menu.innerHTML = "memu";
+            // this._activeWidget.appendChild(menu);
         },
         _onElementDragenter: function(event){
-            var e = EventUtil.getEvent(event);
-            e.preventDefault();
-            e.stopPropagation();
-            addClass(this.element, 'c-dragover');
+            event.preventDefault();
+            event.stopPropagation();
+            this.$targetElement.addClass('c-dragover');
         },
         _onElementDragover: function(event){
-            var e = EventUtil.getEvent(event);
-            e.preventDefault();
-            e.stopPropagation();
-            if(!hasClass(this.element, 'c-dragover')){
-                addClass(this.element, 'c-dragover');
+            event.preventDefault();
+            event.stopPropagation();
+            var $targetElement = this.$targetElement;
+            if(!$targetElement.hasClass('c-dragover')){
+                $targetElement.addClass('c-dragover');
             }
         },
         _onElementDrop: function(event){
-            var e = EventUtil.getEvent(event);
-            e.preventDefault();
-            e.stopPropagation();
+            event.preventDefault();
+            event.stopPropagation();
+            var $targetElement = this.$targetElement;
 
-            removeClass(this.element, 'c-dragover');
-            var wapperElement    = this.wapperElement,
-                dashboardElement = this.dashboardElement,
-                element          = this.element;
+            $targetElement.removeClass('c-dragover');
+            var $wapperElement    = this.$wapperElement,
+                $dashboardElement = this.$dashboardElement,
+                $targetElement   = this.$targetElement;
 
-            var dataTransfer = e.dataTransfer;
+            var dataTransfer = event.originalEvent.dataTransfer;
             dataTransfer.effectAllowed = "copy";
             var url  = dataTransfer.getData("text/uri-list");
             var text = dataTransfer.getData("text/plain");
@@ -198,13 +202,14 @@
                 return;
             }
             if(url){
+                console.log('url:',url);
                 this._createUrlWidgets(url);
                 return;
             }
             if(text){
                 console.log('text:',text);
-                //widgets = this._createTextWidgets(text);
-                //return;
+                this._createTextWidgets(text);
+                return;
             }
             if(html){
                 console.log('html:',html);
@@ -213,28 +218,28 @@
             }
         },
         _onElementDragleave: function(event){
-            var e = EventUtil.getEvent(event);
-            e.preventDefault();
-            e.stopPropagation();
-            removeClass(this.element,'c-dragover');
+            event.preventDefault();
+            event.stopPropagation();
+            this.$targetElement.removeClass('c-dragover');
         },
-        _putWidgetInDashboard: function(widget){
-            this.dashboardElement.appendChild(widget);
-            this._widgetsArray.push(widget);
+        _putWidgetInDashboard: function($widget){
+            this.$dashboardElement.append($widget);
+            this._widgetsArray.push($widget);
         },
         _createFileWidgets: function(files){
             var self = this;
             for(var i = 0; i < files.length; i++){
                 var file = files[i];
                 self._uploadFile(file, function(data){
-                    var widget;
-                    widget = document.createElement('div');
-                    widget.className = widget_className + file_widget_className;
-                    widget.innerHTML = "<p>File information: <strong>" + data.fileName +
+                    var $widget;
+                    $widget = $("<div></div>");
+                    $widget.addClass(widget_className);
+                    $widget.addClass(file_widget_className);
+                    $widget.html( "<p>File information: <strong>" + data.fileName +
                                         "</strong> type: <strong>" + file.type +
                                         "</strong> size: <strong>" + file.size +
-                                        "</strong> bytes</p>";
-                    self._putWidgetInDashboard(widget);
+                                        "</strong> bytes</p>");
+                    self._putWidgetInDashboard($widget);
                 });
             }
         },
@@ -244,31 +249,38 @@
             }
         },
         _createUrlWidgets: function(url){
-            var widget;
+            var $widget;
             //url
             if(url){
-                widget = document.createElement('div');
-                widget.className = widget_className + txt_widget_className;
-                widget.innerHTML = "<p>" + url + "</p>";
-                this._putWidgetInDashboard(widget);
+                $widget = $("<div></div>");
+                $widget.addClass(widget_className);
+                $widget.addClass(url_widget_className);
+                $widget.html( "<p>" + url + "</p>");
+                this._putWidgetInDashboard($widget);
             }
             //img
         },
         _createTextWidgets: function(text){
-            
+            var $widget;
+            if(text){
+                $widget = $("<div></div>");
+                $widget.addClass(widget_className);
+                $widget.addClass(txt_widget_className);
+                $widget.html( "<p>" + text + "</p>");
+                this._putWidgetInDashboard($widget);
+            }
         },
         _createHtmlWidgets: function(html){
             
         },
         _onScale: function(event){
-            var e = EventUtil.getEvent(event),
-                delta = EventUtil.getWheelDelta(event);
-            e.preventDefault();
-            e.stopPropagation();
+            var delta = event.deltaY;
+            event.preventDefault();
+            event.stopPropagation();
 
-            var wapperElement = this.wapperElement,
-                dashboardElement = this.dashboardElement,
-                element = this.element;
+            var $wapperElement = this.$wapperElement,
+                $dashboardElement = this.$dashboardElement,
+                $targetElement = this.$targetElement;
 
              //判断滚轮放大或缩小, 以scaleSize/10为单位放大或缩小
             if (delta > 0) {
@@ -278,21 +290,21 @@
                     this.scale = actAdd(this.scale,this.scaling);
                     this.scale > this.maxScale?this.scale = this.maxScale:''; 
                     //放大
-                    wapperElement.style.transform = "scale(" + this.scale + ")";
+                    $wapperElement.css('transform', "scale(" + this.scale + ")");
 
                     //获取以鼠标为中心放大后需要移动的距离
-                    var OffsetLeft = this._offsetLeftAfterScaling (e,oldscale,this.scale);
-                    var OffsetTop  = this._offsetTopAfterScaling  (e,oldscale,this.scale);
+                    var OffsetLeft = this._offsetLeftAfterScaling (event,oldscale,this.scale);
+                    var OffsetTop  = this._offsetTopAfterScaling  (event,oldscale,this.scale);
 
                     //相对移动
                     if(OffsetLeft){
-                        dashboardElement.style.left = OffsetLeft + "px";
+                        $dashboardElement.css('left', OffsetLeft + "px");
                     }
                     else{
                         console.log("_onScale error"," - OffsetLeft");
                     }
                     if(OffsetTop){
-                        dashboardElement.style.top  = OffsetTop  + "px";
+                        $dashboardElement.css('top', OffsetTop + "px");
                     }
                     else{
                         console.log("_onScale error"," - OffsetTop");
@@ -306,15 +318,15 @@
                     this.scale = actAdd(this.scale, -this.scaling);
                     this.scale < this.minScale?this.scale = this.minScale:''; 
                     //缩小
-                    wapperElement.style.transform = "scale(" + this.scale + ")";
+                    $wapperElement.css('transform', "scale(" + this.scale + ")");
 
                     //获取以鼠标为中心放大后需要移动的距离
-                    var OffsetLeft = this._offsetLeftAfterScaling(e,oldscale,this.scale);
-                    var OffsetTop  = this._offsetTopAfterScaling(e,oldscale,this.scale);
+                    var OffsetLeft = this._offsetLeftAfterScaling(event,oldscale,this.scale);
+                    var OffsetTop  = this._offsetTopAfterScaling(event,oldscale,this.scale);
 
                     //相对移动
-                    dashboardElement.style.left = OffsetLeft + "px";
-                    dashboardElement.style.top  = OffsetTop  + "px";
+                    $dashboardElement.css('left', OffsetLeft + "px");
+                    $dashboardElement.css('top', OffsetTop + "px");
                 }
             }
 
@@ -322,58 +334,49 @@
             scaleRate = actDivision(1,this.scale);
 
             //防止滚动后出边界
-            var dashboardTop = parseInt(dashboardElement.style.top) || 0;
-            var dashboardLeft = parseInt(dashboardElement.style.left) || 0;
-            var dashboardWidth = parseInt(dashboardElement.offsetWidth);
-            var dashboardHeight = parseInt(dashboardElement.offsetHeight);
-            var elementWidth = parseInt(element.offsetWidth);
-            var elementHeight = parseInt(element.offsetHeight);
+            var dashboardTop = parseInt($dashboardElement.css('top')) || 0;
+            var dashboardLeft = parseInt($dashboardElement.css('left')) || 0;
+            var dashboardWidth = parseInt($dashboardElement.width());
+            var dashboardHeight = parseInt($dashboardElement.height());
+            var elementWidth = parseInt($targetElement.width());
+            var elementHeight = parseInt($targetElement.height());
             var maxTop = -(dashboardHeight - elementHeight * scaleRate);
             var maxLeft = -(dashboardWidth - elementWidth * scaleRate);
             if(dashboardTop <= 0){
                 (Math.abs(dashboardTop) + elementHeight * scaleRate) >= dashboardHeight
-                ? dashboardElement.style.top = maxTop + "px" : "";
+                ? $dashboardElement.css('top', maxTop + "px") : "";
             }
             else{
-                dashboardElement.style.top = "0px"
+                $dashboardElement.css('top', '0px');
             }
             if(dashboardLeft <= 0){
                 (Math.abs(dashboardLeft) + elementWidth * scaleRate) >= dashboardWidth
-                ? dashboardElement.style.left = maxLeft + "px" : "";
+                ? $dashboardElement.css('left', maxLeft + "px") : "";
             }
             else{
-                dashboardElement.style.left = "0px";
+                $dashboardElement.css('left', '0px');
             }
         },
         _onWidgetDrag: function(event){
-            var e = EventUtil.getEvent(event);
-
-            var wapperElement = this.wapperElement,
-                dashboardElement = this.dashboardElement,
-                element = this.element,
-                target = e.delegateTarget;
+            var $wapperElement = this.$wapperElement,
+                $dashboardElement = this.$dashboardElement,
+                $target = $(event.target);
             //传递给_onWidgetDraging和_onWidgetDragend
-            this.target = e.delegateTarget;
+            this.$target = $target;
 
-            //var scaleRate = actDivision(this.multiple, this.scale);
             scaleRate = actDivision(1,this.scale);
-            console.log(e, target);
-            if(isWidgetElement(target)){
-                target.offset_x = e.clientX * scaleRate - target.offsetLeft;
-                target.offset_y = e.clientY * scaleRate - target.offsetTop;
-                console.log("dragstart");
+            if(isWidgetElement($target)){
+                this.offset_x = event.clientX * scaleRate - event.target.offsetLeft;
+                this.offset_y = event.clientY * scaleRate - event.target.offsetTop;
                 document.onmousemove = this._onWidgetDraging.bind(this);
                 document.onmouseup = this._onWidgetDragend.bind(this);
-                //EventUtil.addHandler(document, "mousemove",  this._onWidgetDraging.bind(this) );
-                //EventUtil.addHandler(document, "mouseup",    this._onWidgetDragend.bind(this) );
             }
         },
         _onWidgetDraging: function(event){
-            var e = EventUtil.getEvent(event);
-            var target = this.target,
-                wapperElement = this.wapperElement,
-                dashboardElement = this.dashboardElement,
-                element = this.element;
+            var $target = this.$target,
+                $wapperElement = this.wapperElement,
+                $dashboardElement = this.dashboardElement,
+                $targetElement = this.$targetElement;
 
             //target.style.cursor = "pointer";
             //target.style.position = "absolute";
@@ -382,127 +385,123 @@
             scaleRate = actDivision(1,this.scale);
 
 
-            var targetTop = parseInt(target.style.top) || 0;
-            var targetLeft = parseInt(target.style.left) || 0;
+            var targetTop = parseInt($target.css('top')) || 0;
+            var targetLeft = parseInt($target.css('left')) || 0;
 
-            var targetWidth = parseInt(target.offsetWidth);
-            var targetHeight = parseInt(target.offsetHeight);
+            var targetWidth = parseInt($target.width());
+            var targetHeight = parseInt($target.height());
 
-            var containerWidth = parseInt(element.offsetWidth);
-            var containerHeight = parseInt(element.offsetHeight);
+            var containerWidth = parseInt($targetElement.width());
+            var containerHeight = parseInt($targetElement.height());
 
-            var top = e.clientY * scaleRate - target.offset_y;
-            var left = e.clientX * scaleRate - target.offset_x;
+            var top = event.clientY * scaleRate - this.offset_y;
+            var left = event.clientX * scaleRate - this.offset_x;
 
             //防止widget出dashboard边界
-            var dashboardWidth = target.parentNode.offsetWidth;
-            var dashboardHeight = target.parentNode.offsetHeight;
+            var dashboardWidth = $target.parent().width();
+            var dashboardHeight = $target.parent().height();
 
             var maxTop = dashboardHeight - targetHeight;
             var maxLeft = dashboardWidth - targetWidth;
 
             if(top > 0){
               (top + targetHeight) >= dashboardHeight
-                ? target.style.top = maxTop + "px" : target.style.top = top+ "px";
+                ? $target.css('top', maxTop + "px") : $target.css('top', top+ "px");
             }
             else{
-              target.style.top = "0px"
+              $target.css('top', "0px");
             }
 
             if(left >0){
               (left + targetWidth) >= dashboardWidth
-                ? target.style.left = maxLeft + "px" : target.style.left = left + "px";
+                //? target.style.left = maxLeft + "px" : target.style.left = left + "px";
+                ? $target.css('left', maxLeft + "px") : $target.css('left', left+ "px");
             }
             else{
-              target.style.left = "0px";
+              $target.css('left', "0px");
             }
         },
         _onWidgetDragend: function(event){
-            //event.stopPropagation();
-            console.log("dragend");
-            //EventUtil.removeHandler(document,"mousemove",this._onWidgetDraging.bind(this)  );
-            //EventUtil.removeHandler(document,"mouseup",  this._onWidgetDragend.bind(this) );
             document.onmouseup = null;
             document.onmousemove = null;
         },
         _onDashboardDrag: function(event){
-            var e = EventUtil.getEvent(event);
+            var $wapperElement = this.$wapperElement,
+                $dashboardElement = this.$dashboardElement,
+                $targetElement = this.$targetElement,
+                $target = $(event.target);
+            this.$target = $(event.target);
 
-            var wapperElement = this.wapperElement,
-                dashboardElement = this.dashboardElement,
-                element = this.element,
-                target = e.target;
-            this.target = e.target;
-
-            //var scaleRate = actDivision(this.multiple, this.scale);
             scaleRate = actDivision(1,this.scale);
 
-            if(isDashboardElement(target)){
-                target.offset_x = e.clientX * scaleRate - target.offsetLeft;
-                target.offset_y = e.clientY * scaleRate - target.offsetTop;
+            if(isDashboardElement($target)){
+                this.offset_x = event.clientX * scaleRate - event.target.offsetLeft;
+                this.offset_y = event.clientY * scaleRate - event.target.offsetTop;
                 document.onmousemove = this._onDashboardDraging.bind(this);
                 document.onmouseup = this._onDashboardDragend.bind(this);
-                //EventUtil.addHandler(document, "mousemove",  this._onDashboardDraging.bind(this) );
-                //EventUtil.addHandler(document, "mouseup",    this._onDashboardDragend.bind(this) );
             }
         },
         _onDashboardDraging: function(event){
-            var e = EventUtil.getEvent(event);
-            var target = this.target,
-                wapperElement = this.wapperElement,
-                dashboardElement = this.dashboardElement,
-                element = this.element;
+            var $target = this.$target,
+                $wapperElement = this.$wapperElement,
+                $dashboardElement = this.$dashboardElement,
+                $targetElement = this.$targetElement;
 
-            target.style.cursor = "pointer";
-            target.style.position = "absolute";
+            $target.css('cursor', "pointer");
+            $target.css('position', "absolute");
+            // $target.style.cursor = "pointer";
+            // $target.style.position = "absolute";
             var scaleSize = this.scale;
             //var scaleRate = actDivision(this.multiple,scaleSize);
             scaleRate = actDivision(1,this.scale);
 
 
-            var targetTop = parseInt(target.style.top) || 0;
-            var targetLeft = parseInt(target.style.left) || 0;
+            var targetTop = parseInt($target.css('top')) || 0;
+            var targetLeft = parseInt($target.css('left')) || 0;
 
-            var targetWidth = parseInt(target.offsetWidth);
-            var targetHeight = parseInt(target.offsetHeight);
+            var targetWidth = parseInt($target.width());
+            var targetHeight = parseInt($target.height());
 
-            var containerWidth = parseInt(element.offsetWidth);
-            var containerHeight = parseInt(element.offsetHeight);
+            var containerWidth = parseInt($targetElement.width());
+            var containerHeight = parseInt($targetElement.height());
 
-            var top = e.clientY * scaleRate - target.offset_y;
-            var left = e.clientX * scaleRate - target.offset_x;
+            var top = event.clientY * scaleRate - this.offset_y;
+            var left = event.clientX * scaleRate - this.offset_x;
 
             //防止dashboard出container边界
             var maxTop = -(targetHeight - containerHeight * scaleRate);
             var maxLeft = -(targetWidth - containerWidth * scaleRate);
             if(top <= 0){
               (Math.abs(top) + containerHeight * scaleRate) >= targetHeight
-                ? target.style.top = maxTop + "px" : target.style.top = top+ "px";
+                //? target.style.top = maxTop + "px" : target.style.top = top+ "px";
+                ? $target.css('top', maxTop + "px") : $target.css('top', top+ "px");
             }
             else{
-              target.style.top = "0px"
+                $target.css('top', "0px");
             }
 
             if(left <=0){
               (Math.abs(left) + containerWidth * scaleRate) >= targetWidth
-                ? target.style.left = maxLeft + "px" : target.style.left = left + "px";
+                //? target.style.left = maxLeft + "px" : target.style.left = left + "px";
+                ? $target.css('left', maxLeft + "px") : $target.css('left', left+ "px");
             }
             else{
-              target.style.left = "0px";
+               $target.css('left', "0px");
             }
         },
         _onDashboardDragend: function(event){
             document.onmouseup = document.onmousemove = null;
         },
         _offsetLeftAfterScaling: function(e,oldScale,newScale){
-            var wapperElement    = this.wapperElement,
-                dashboardElement = this.dashboardElement,
-                element          = this.element;
+            var $wapperElement    = this.$wapperElement,
+                $dashboardElement = this.$dashboardElement,
+                $targetElement   = this.$targetElement;
 
-            var width = parseInt(element.style.width) || parseInt(element.offsetWidth),
-                wapperX = this._getClientLeft(element),
-                oX = parseInt(dashboardElement.style.left) || 0 ,
+            var width = parseInt($targetElement.width()),
+                wapperX = this._getClientLeft($targetElement),
+                oX = parseInt($dashboardElement.css('left')) || 0 ,
                 pageX = this._getPageX(e);
+
             //var Bx = ((pageX-wapperX) - oX * (oldScale/10.0)) / (width * (oldScale/10.0));
             //var newX = ((pageX-wapperX) - (Bx * width * (newScale/10.0))  ) * (10.0 / newScale);
             var Bx = ((pageX - wapperX) - oX * (oldScale)) / (width * (oldScale));
@@ -514,13 +513,13 @@
             return newX;
         },
         _offsetTopAfterScaling: function(e,oldScale,newScale){
-            var wapperElement    = this.wapperElement,
-                dashboardElement = this.dashboardElement,
-                element          = this.element;
+            var $wapperElement    = this.$wapperElement,
+                $dashboardElement = this.$dashboardElement,
+                $targetElement   = this.$targetElement;
 
-            var height = parseInt(element.style.height) || parseInt(element.offsetHeight),
-                oY = parseInt(dashboardElement.style.top) || 0,
-                wapperY = this._getClientTop(element),
+            var height = parseInt($targetElement.height()),
+                oY = parseInt($dashboardElement.css('top')) || 0,
+                wapperY = this._getClientTop($targetElement),
                 pageY = this._getPageY(e);
             //var By = ((pageY-wapperY) - oY * (oldScale/10.0)) / (height * (oldScale/10.0));
             //var newY = ((pageY-wapperY) - (By * height * (newScale/10.0))  ) * (10.0 / newScale);
@@ -530,15 +529,19 @@
             //var newY = actMultiply(  actAdd( actAdd(pageY,-wapperY), - actMultiply(actMultiply(By,height),newScale)  ) ,actDivision(1 , newScale));
             return newY;
         },
-        _getClientTop: function(element){
-            var offset = element.offsetTop;
-            if(element.offsetParent!=null) offset += arguments.callee(element.offsetParent);
+        _getClientTop: function($element){
+            if($element.get) { $element = $element.get(0); }
+            var offset = $element.offsetTop;
+            if($element.offsetParent!=null) offset += arguments.callee($element.offsetParent);
             return offset;
+            //return $element.offsetParent().offset().top;
         },
-        _getClientLeft: function(element){
-            var offset = element.offsetLeft;
-            if(element.offsetParent!=null) offset += arguments.callee(element.offsetParent);
+        _getClientLeft: function($element){
+            if($element.get) { $element = $element.get(0); }
+            var offset = $element.offsetLeft;
+            if($element.offsetParent!=null) offset += arguments.callee($element.offsetParent);
             return offset;
+            //return $element.offsetParent().offset().left;
         },
         _getPageX: function(event){
             if ( event.pageX == null && event.clientX !=  null ) {
@@ -559,43 +562,25 @@
     };
     c.prototype.constructor = c;
 
-    function isWapperElement (elem){
-        if(hasClass(elem,'c-wapper')){
+    function isWapperElement ($elem){
+        if($elem.hasClass('c-wapper')){
             return true;
         }
         return false;
     }
-    function isDashboardElement (elem){
-        if(hasClass(elem,'c-dashboard')){
+    function isDashboardElement ($elem){
+        if($elem.hasClass('c-dashboard')){
             return true;
         }
         return false;
     }
-    function isWidgetElement (elem){
-        if(hasClass(elem,'c-widget')){
+    function isWidgetElement ($elem){
+        if($elem.hasClass('c-widget')){
             return true;
         }
         return false;
     }
 
-    //判断是否有该class
-    function hasClass(dom, className) {
-        className = className.replace(/^\s|\s$/g, "")
-        return (
-            " " + ((dom || {}).className || "").replace(/\s/g, " ") + " "
-        ).indexOf(" " + className + " ") >= 0
-    }
-    //元素增加class
-    function addClass(ele, cls) { 
-        if (!hasClass(ele, cls)) ele.className += " "+cls;
-    }
-    //元素移除class
-    function removeClass(ele, cls) {
-        if (hasClass(ele, cls)) {
-            var reg = new RegExp('(\\s|^)'+cls+'(\\s|$)');
-            ele.className = ele.className.replace(reg, ' ');
-        }
-    }
     //删除左右两端的空格
     String.prototype.trim = function(){
          return this.replace(/(^\s*)|(\s*$)/g, "");
@@ -645,8 +630,8 @@
         dashboardElement.appendChild(testWidget);
 
         return {
-            'wapperElement':wapperElement,
-            'dashboardElement':dashboardElement
+            'wapperElement': $(wapperElement),
+            'dashboardElement': $(dashboardElement)
             };
     }
 
@@ -679,342 +664,6 @@
         document.querySelector(value);
         return true;
     }
-    function mergeObj() {
-        var options,
-            name,
-            src,
-            copy,
-            copyIsArray,
-            clone,
-            target = arguments[0] || {},
-            i = 1,
-            length = arguments.length,
-            deep = false;
-     
-        // Handle a deep copy situation
-        if ( typeof target === "boolean" ) {
-            deep = target;
-            target = arguments[1] || {};
-            // skip the boolean and the target
-            i = 2;
-        }
-     
-        // Handle case when target is a string or something (possible in deep copy)
-        if ( typeof target !== "object" ) {
-            target = {};
-        }
-     
-        // 如果只有一个参数，那将意味着对jquery自身进行扩展
-        if ( length === i ) {
-            target = this;
-            --i;
-        }
-     
-        for ( ; i < length; i++ ) {
-            // Only deal with non-null/undefined values
-            if ( (options = arguments[ i ]) != null ) {
-                // Extend the base object
-                for ( name in options ) {
-                    src = target[ name ];
-                    copy = options[ name ];
-     
-                    // Prevent never-ending loop
-                    if ( target === copy ) {
-                        continue;
-                    }
-     
-                    if ( copy !== undefined ) {
-                        target[ name ] = copy;
-                    }
-                }
-            }
-        }
-     
-        // Return the modified object
-        return target;
-    };
-
-    var client = function(){
-
-        //rendering engines
-        var engine = {            
-            ie: 0,
-            gecko: 0,
-            webkit: 0,
-            khtml: 0,
-            opera: 0,
-
-            //complete version
-            ver: null  
-        };
-        
-        //browsers
-        var browser = {
-            
-            //browsers
-            ie: 0,
-            firefox: 0,
-            safari: 0,
-            konq: 0,
-            opera: 0,
-            chrome: 0,
-            safari: 0,
-
-            //specific version
-            ver: null
-        };
-
-        
-        //platform/device/OS
-        var system = {
-            win: false,
-            mac: false,
-            x11: false,
-            
-            //mobile devices
-            iphone: false,
-            ipod: false,
-            ipad: false,
-            ios: false,
-            android: false,
-            nokiaN: false,
-            winMobile: false,
-            
-            //game systems
-            wii: false,
-            ps: false 
-        };    
-
-        //detect rendering engines/browsers
-        var ua = navigator.userAgent;    
-        if (window.opera){
-            engine.ver = browser.ver = window.opera.version();
-            engine.opera = browser.opera = parseFloat(engine.ver);
-        } else if (/AppleWebKit\/(\S+)/.test(ua)){
-            engine.ver = RegExp["$1"];
-            engine.webkit = parseFloat(engine.ver);
-            
-            //figure out if it's Chrome or Safari
-            if (/Chrome\/(\S+)/.test(ua)){
-                browser.ver = RegExp["$1"];
-                browser.chrome = parseFloat(browser.ver);
-            } else if (/Version\/(\S+)/.test(ua)){
-                browser.ver = RegExp["$1"];
-                browser.safari = parseFloat(browser.ver);
-            } else {
-                //approximate version
-                var safariVersion = 1;
-                if (engine.webkit < 100){
-                    safariVersion = 1;
-                } else if (engine.webkit < 312){
-                    safariVersion = 1.2;
-                } else if (engine.webkit < 412){
-                    safariVersion = 1.3;
-                } else {
-                    safariVersion = 2;
-                }   
-                
-                browser.safari = browser.ver = safariVersion;        
-            }
-        } else if (/KHTML\/(\S+)/.test(ua) || /Konqueror\/([^;]+)/.test(ua)){
-            engine.ver = browser.ver = RegExp["$1"];
-            engine.khtml = browser.konq = parseFloat(engine.ver);
-        } else if (/rv:([^\)]+)\) Gecko\/\d{8}/.test(ua)){    
-            engine.ver = RegExp["$1"];
-            engine.gecko = parseFloat(engine.ver);
-            
-            //determine if it's Firefox
-            if (/Firefox\/(\S+)/.test(ua)){
-                browser.ver = RegExp["$1"];
-                browser.firefox = parseFloat(browser.ver);
-            }
-        } else if (/MSIE ([^;]+)/.test(ua)){    
-            engine.ver = browser.ver = RegExp["$1"];
-            engine.ie = browser.ie = parseFloat(engine.ver);
-        }
-        
-        //detect browsers
-        browser.ie = engine.ie;
-        browser.opera = engine.opera;
-        
-
-        //detect platform
-        var p = navigator.platform;
-        system.win = p.indexOf("Win") == 0;
-        system.mac = p.indexOf("Mac") == 0;
-        system.x11 = (p == "X11") || (p.indexOf("Linux") == 0);
-
-        //detect windows operating systems
-        if (system.win){
-            if (/Win(?:dows )?([^do]{2})\s?(\d+\.\d+)?/.test(ua)){
-                if (RegExp["$1"] == "NT"){
-                    switch(RegExp["$2"]){
-                        case "5.0":
-                            system.win = "2000";
-                            break;
-                        case "5.1":
-                            system.win = "XP";
-                            break;
-                        case "6.0":
-                            system.win = "Vista";
-                            break;
-                        case "6.1":
-                            system.win = "7";
-                            break;
-                        default:
-                            system.win = "NT";
-                            break;                
-                    }                            
-                } else if (RegExp["$1"] == "9x"){
-                    system.win = "ME";
-                } else {
-                    system.win = RegExp["$1"];
-                }
-            }
-        }
-        
-        //mobile devices
-        system.iphone = ua.indexOf("iPhone") > -1;
-        system.ipod = ua.indexOf("iPod") > -1;
-        system.ipad = ua.indexOf("iPad") > -1;
-        system.nokiaN = ua.indexOf("NokiaN") > -1;
-        system.winMobile = (system.win == "CE");
-        
-        //determine iOS version
-        if (system.mac && ua.indexOf("Mobile") > -1){
-            if (/CPU (?:iPhone )?OS (\d+_\d+)/.test(ua)){
-                system.ios = parseFloat(RegExp.$1.replace("_", "."));
-            } else {
-                system.ios = 2;  //can't really detect - so guess
-            }
-        }
-        
-        //determine Android version
-        if (/Android (\d+\.\d+)/.test(ua)){
-            system.android = parseFloat(RegExp.$1);
-        }
-        
-        //gaming systems
-        system.wii = ua.indexOf("Wii") > -1;
-        system.ps = /playstation/i.test(ua);
-        
-        //return it
-        return {
-            engine:     engine,
-            browser:    browser,
-            system:     system        
-        };
-
-    }();
-
-    var EventUtil = {
-
-        addHandler: function(element, type, handler){
-            if (element.addEventListener){
-                element.addEventListener(type, handler, false);
-            } else if (element.attachEvent){
-                element.attachEvent("on" + type, handler);
-            } else {
-                element["on" + type] = handler;
-            }
-        },
-        
-        getButton: function(event){
-            if (document.implementation.hasFeature("MouseEvents", "2.0")){
-                return event.button;
-            } else {
-                switch(event.button){
-                    case 0:
-                    case 1:
-                    case 3:
-                    case 5:
-                    case 7:
-                        return 0;
-                    case 2:
-                    case 6:
-                        return 2;
-                    case 4: return 1;
-                }
-            }
-        },
-        
-        getCharCode: function(event){
-            if (typeof event.charCode == "number"){
-                return event.charCode;
-            } else {
-                return event.keyCode;
-            }
-        },
-        
-        getClipboardText: function(event){
-            var clipboardData =  (event.clipboardData || window.clipboardData);
-            return clipboardData.getData("text");
-        },
-        
-        getEvent: function(event){
-            return event ? event : window.event;
-        },
-        
-        getRelatedTarget: function(event){
-            if (event.relatedTarget){
-                return event.relatedTarget;
-            } else if (event.toElement){
-                return event.toElement;
-            } else if (event.fromElement){
-                return event.fromElement;
-            } else {
-                return null;
-            }
-        
-        },
-        
-        getTarget: function(event){
-            return event.target || event.srcElement;
-        },
-        
-        getWheelDelta: function(event){
-            if (event.wheelDelta){
-                return (client.engine.opera && client.engine.opera < 9.5 ? -event.wheelDelta : event.wheelDelta);
-            } else {
-                return -event.detail * 40;
-            }
-        },
-        
-        preventDefault: function(event){
-            if (event.preventDefault){
-                event.preventDefault();
-            } else {
-                event.returnValue = false;
-            }
-        },
-
-        removeHandler: function(element, type, handler){
-            if (element.removeEventListener){
-                element.removeEventListener(type, handler, false);
-            } else if (element.detachEvent){
-                element.detachEvent("on" + type, handler);
-            } else {
-                element["on" + type] = null;
-            }
-        },
-        
-        setClipboardText: function(event, value){
-            if (event.clipboardData){
-                event.clipboardData.setData("text/plain", value);
-            } else if (window.clipboardData){
-                window.clipboardData.setData("text", value);
-            }
-        },
-        
-        stopPropagation: function(event){
-            if (event.stopPropagation){
-                event.stopPropagation();
-            } else {
-                event.cancelBubble = true;
-            }
-        }
-
-    };
     window.collector = collector;
 
 })(window, document);
