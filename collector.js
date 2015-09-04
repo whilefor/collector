@@ -147,7 +147,7 @@
             $targetElement.on('mousedown', widgetSelector, this._onWidgetDrag.bind(this));
 
             //widget active
-            $targetElement.on('click', widgetSelector, this._onWidgetActive.bind(this));
+            $targetElement.on('mousedown', widgetSelector, this._onWidgetActive.bind(this));
 
             //drag widget into dashboard
             $targetElement.on('dragenter',  this._onElementDragenter.bind(this));
@@ -159,13 +159,8 @@
             event.preventDefault();
             event.stopPropagation();
             this.$activeWidget ? this.$activeWidget.removeClass('c-widget-active') : '';
-            $(event.target).addClass('c-widget-active');
-            this.$activeWidget = $(event.target);
-
-            // var menu = document.createElement('div');
-            // menu.className = "c-widget-menu";
-            // menu.innerHTML = "memu";
-            // this._activeWidget.appendChild(menu);
+            $(event.currentTarget).addClass('c-widget-active');
+            this.$activeWidget = $(event.currentTarget);
         },
         _onElementDragenter: function(event){
             event.preventDefault();
@@ -203,7 +198,7 @@
             }
             if(url){
                 console.log('url:',url);
-                this._createUrlWidgets(url);
+                this._createUrlWidgets(url, event);
                 return;
             }
             if(text){
@@ -222,7 +217,20 @@
             event.stopPropagation();
             this.$targetElement.removeClass('c-dragover');
         },
-        _putWidgetInDashboard: function($widget){
+        _putWidgetInDashboard: function($widget, event){
+            //position
+            var scaleRate = actDivision(1, this.scale);
+            var clientX = event.originalEvent.clientX;
+            var clientY = event.originalEvent.clientY;
+
+            var wx = this._getClientLeft(this.$wapperElement);
+            var wy = this._getClientTop(this.$wapperElement);
+
+            var tx = (clientX - wx) * scaleRate - parseInt(this.$dashboardElement.css('left'));
+            var ty = (clientY - wy) * scaleRate - parseInt(this.$dashboardElement.css('top'));
+
+            $widget.css('top',  ty + 'px');
+            $widget.css('left', tx + 'px');
             this.$dashboardElement.append($widget);
             this._widgetsArray.push($widget);
         },
@@ -248,15 +256,14 @@
                 callback({fileName:'test',realName:"321"});
             }
         },
-        _createUrlWidgets: function(url){
+        _createUrlWidgets: function(url, event){
             var $widget;
-            //url
             if(url){
                 $widget = $("<div></div>");
                 $widget.addClass(widget_className);
                 $widget.addClass(url_widget_className);
                 $widget.html( "<p>" + url + "</p>");
-                this._putWidgetInDashboard($widget);
+                this._putWidgetInDashboard($widget, event);
             }
             //img
         },
@@ -360,14 +367,15 @@
         _onWidgetDrag: function(event){
             var $wapperElement = this.$wapperElement,
                 $dashboardElement = this.$dashboardElement,
-                $target = $(event.target);
+                $target = $(event.currentTarget);
             //传递给_onWidgetDraging和_onWidgetDragend
             this.$target = $target;
 
             scaleRate = actDivision(1,this.scale);
             if(isWidgetElement($target)){
-                this.offset_x = event.clientX * scaleRate - event.target.offsetLeft;
-                this.offset_y = event.clientY * scaleRate - event.target.offsetTop;
+                this.offset_x = event.clientX * scaleRate - event.currentTarget.offsetLeft;
+                this.offset_y = event.clientY * scaleRate - event.currentTarget.offsetTop;
+                //console.log( event.currentTarget.offsetLeft, event.currentTarget.offsetTop,"widget");
                 document.onmousemove = this._onWidgetDraging.bind(this);
                 document.onmouseup = this._onWidgetDragend.bind(this);
             }
@@ -378,10 +386,7 @@
                 $dashboardElement = this.dashboardElement,
                 $targetElement = this.$targetElement;
 
-            //target.style.cursor = "pointer";
-            //target.style.position = "absolute";
             var scaleSize = this.scale;
-            //var scaleRate = actDivision(this.multiple,scaleSize);
             scaleRate = actDivision(1,this.scale);
 
 
@@ -414,7 +419,6 @@
 
             if(left >0){
               (left + targetWidth) >= dashboardWidth
-                //? target.style.left = maxLeft + "px" : target.style.left = left + "px";
                 ? $target.css('left', maxLeft + "px") : $target.css('left', left+ "px");
             }
             else{
@@ -449,10 +453,7 @@
 
             $target.css('cursor', "pointer");
             $target.css('position', "absolute");
-            // $target.style.cursor = "pointer";
-            // $target.style.position = "absolute";
             var scaleSize = this.scale;
-            //var scaleRate = actDivision(this.multiple,scaleSize);
             scaleRate = actDivision(1,this.scale);
 
 
@@ -473,7 +474,6 @@
             var maxLeft = -(targetWidth - containerWidth * scaleRate);
             if(top <= 0){
               (Math.abs(top) + containerHeight * scaleRate) >= targetHeight
-                //? target.style.top = maxTop + "px" : target.style.top = top+ "px";
                 ? $target.css('top', maxTop + "px") : $target.css('top', top+ "px");
             }
             else{
@@ -482,7 +482,6 @@
 
             if(left <=0){
               (Math.abs(left) + containerWidth * scaleRate) >= targetWidth
-                //? target.style.left = maxLeft + "px" : target.style.left = left + "px";
                 ? $target.css('left', maxLeft + "px") : $target.css('left', left+ "px");
             }
             else{
@@ -560,7 +559,7 @@
             return event.pageY;
         }
     };
-    c.prototype.constructor = c;
+    c.prototype.constructor 
 
     function isWapperElement ($elem){
         if($elem.hasClass('c-wapper')){
