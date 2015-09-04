@@ -158,9 +158,15 @@
         _onWidgetActive: function(event){
             event.preventDefault();
             event.stopPropagation();
-            this.$activeWidget ? this.$activeWidget.removeClass('c-widget-active') : '';
+            if(this.$activeWidget){
+                this.$activeWidget.removeClass('c-widget-active');
+                this.$activeWidget.find('.c-widget-menu').remove();
+
+            }
             $(event.currentTarget).addClass('c-widget-active');
             this.$activeWidget = $(event.currentTarget);
+            var menu = "<div class='c-widget-menu'></div>";
+            this.$activeWidget.append(menu);
         },
         _onElementDragenter: function(event){
             event.preventDefault();
