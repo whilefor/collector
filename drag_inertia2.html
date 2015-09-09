@@ -1,0 +1,192 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>面向对象++++拖拽</title>
+    <script type="text/javascript">
+    window.onload = function() {
+        new Drag("div");
+        // new Drag("div1");
+        // new LimitDrag("div2");
+    }
+
+    function Drag(id) {
+        this.oDiv = document.getElementById(id);
+        var _this = this;
+        this.dx = 0;
+        this.dy = 0;
+        this.lastX = 0;
+        this.lastY = 0;
+        this.iSpeedX = 20;
+        this.iSpeedY = 30;
+        this.timer = null;
+        this.oDiv.onmousedown = function(e) {
+            _this.down(e);
+            return false;
+        }
+    }
+    Drag.prototype.down = function(e) {
+        var e = e || event;
+        var _this = this;
+        this.dx = e.clientX - this.oDiv.offsetLeft;
+        this.dy = e.clientY - this.oDiv.offsetTop;
+        document.onmousemove = function(e) {
+            _this.move(e);
+        }
+        document.onmouseup = function() {
+            _this.up();
+        }
+    }
+    Drag.prototype.move = function(e) {
+        var e = e || event;
+        var l = e.clientX - this.dx;
+        var t = e.clientY - this.dy;
+        this.oDiv.style.left = l + 'px';
+        this.oDiv.style.top = t + 'px';
+        this.iSpeedX = (l - this.lastX); //move间隔移动的距离
+        this.iSpeedY = (t - this.lastY);
+        this.lastX = l;
+        this.lastY = t;
+        //document.title = this.iSpeedX + '|' + this.iSpeedY;  
+    }
+    Drag.prototype.up = function() {
+        document.onmousemove = null;
+        document.onmouseup = null;
+        clearInterval(this.timer);
+        var _this = this;
+
+        var temp = 50;
+        console.log(_this.iSpeedX);
+        if (_this.iSpeedX >= 0) {
+            if (_this.iSpeedX > temp) {
+                _this.iSpeedX = temp;
+            }
+        } else {
+            if (_this.iSpeedX < -temp) {
+                _this.iSpeedX = -temp;
+            }
+        }
+
+        if (_this.iSpeedY >= 0) {
+            if (_this.iSpeedY > temp) {
+                _this.iSpeedY = temp;
+            }
+        } else {
+            if (_this.iSpeedY < -temp) {
+                _this.iSpeedY = -temp;
+            }
+        }
+
+        this.timer = setInterval(function() {
+            _this.iSpeedX *= 0.97; //move间隔移动的距离
+            _this.iSpeedY *= 0.97;
+            _this.oDiv.style.left = _this.oDiv.offsetLeft + _this.iSpeedX + 'px';
+            _this.oDiv.style.top = _this.oDiv.offsetTop + _this.iSpeedY + 'px';
+            if ((_this.iSpeedX | 0) == 0 || (_this.iSpeedY | 0) == 0) {
+                clearInterval(_this.timer);
+            }
+            //document.title = _this.iSpeedY;
+        }, 10)
+    }
+
+    //继承
+    function LimitDrag(id) {
+        Drag.call(this, id);
+    }
+    for (var i in Drag.prototype) {
+        LimitDrag.prototype[i] = Drag.prototype[i];
+    }
+    LimitDrag.prototype.move = function(e) {
+        var e = e || event;
+        var l = e.clientX - this.dx;
+        var t = e.clientY - this.dy;
+
+        this.iSpeedX = l - this.lastX;
+        this.iSpeedY = t - this.lastY;
+        this.lastX = l;
+        this.lastY = t;
+        if (l < 0) {
+            l = 0;
+        } else if (l > document.documentElement.clientWidth - this.oDiv.offsetWidth) {
+            l = document.documentElement.clientWidth - this.oDiv.offsetWidth
+        }
+        if (t < 0) {
+            t = 0
+        } else if (t > document.documentElement.clientHeight - this.oDiv.offsetHeight) {
+            t = document.documentElement.clientHeight - this.oDiv.offsetHeight;
+        }
+        this.oDiv.style.left = l + 'px';
+        this.oDiv.style.top = t + 'px';
+    }
+
+
+    /*
+         * 动画帧函数
+         *
+         * */
+
+        var requestFrame=function(){
+            var prefixList=['webkit','moz','ms'];
+            var func;
+            for(var i=0;i<prefixList.length;i++){
+                func=window[prefixList[i]+"RequestAnimationFrame"];
+                if(func){
+                    return function(callback){
+                        func(callback);
+                    }
+                }
+            }
+            return function(callback){
+                setTimeout(callback,67);
+            }
+        }();
+
+
+    /*
+     * 匀减速运动
+     *
+     * */
+    function animate_easeOut(element, from, to, duration, callback) {
+        var time = +new Date;
+        var distance = Math.abs(to - from);
+        var a = 2 * distance / (duration * duration); //x=a*t^2/2  求出加速度 
+        var v0 = Math.sqrt(distance * 2 * a); // 根据公式：求出初速度
+
+
+
+
+
+        var func = function() {
+            var time2, offsetDis, durTime, pos;
+            time2 = +new Date;
+            durTime = time2 - time;
+            offsetDis = Math.ceil(v0 * durTime - a * durTime * durTime / 2); //根据求出位移x
+
+
+            if (duration < durTime) {
+                element.css('left', to + 'px');
+                callback();
+            } else {
+                pos = from > to ? from - offsetDis : from + offsetDis;
+                element.css('left', pos + 'px');
+                requestFrame(func);
+            }
+
+
+        }
+
+
+        func();
+    }
+    </script>
+</head>
+
+<body>
+    <div id="div" style="width:600px;height:600px;background:gray;position:absolute;left:20px;top:20px"></div>
+    <!-- 
+    <div id="div1" style="width:100px;height:100px;background:blue;position:absolute;left:20px;top:150px"></div>
+    <div id="div2" style="width:100px;height:100px;background:orange;position:absolute;left:20px;top:300px"></div> -->
+</body>
+
+</html>

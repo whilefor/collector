@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>DocTitle</title>
+    <script language="javascript" src="lib.js"></script>
+    <script>
+    onload = function() {
+        (function(d, setInterval, clearInterval) {
+            var b = d.getElementById('ss'),
+                dx = dy = vx = vy = ox = oy = 0,
+                sid;
+            b.onmousedown = function(e) {
+                return e = e || event, 
+                dx = e.clientX - b.offsetLeft, 
+                dy = e.clientY - b.offsetTop, 
+                d.onmousemove = mm, 
+                d.onmouseup = mu, 
+                vx = vy = 0, !1;
+            }
+
+            function mm(e) {
+                return e = e || event, 
+                ox = b.x, 
+                oy = b.y, 
+                b.x = e.clientX - dx, 
+                b.y = e.clientY - dy, 
+                vx = (b.x - ox) * 3, 
+                vy = (b.y - oy) * 3, 
+                b.style.left = b.x + 'px', 
+                b.style.top = b.y + 'px', 
+                !1;
+            };
+
+            function mu(e) {
+                return d.onmousemove = d.onmouseup = null, _();
+            }
+
+            function _() {
+                if (sid) clearInterval(sid);
+                return sid = setInterval(function() {
+                    b.style.left = b.offsetLeft + (vx | 0) + 'px', 
+                    b.style.top = b.offsetTop + (vy | 0) + 'px', vx *= .75, vy *= .75;
+                    if ((vx | 0) == 0 || (vy | 0) == 0) clearInterval(sid), sid = null;
+                }, 30), !1;
+            }
+        })(document, setInterval, clearInterval)
+    };
+    </script>
+</head>
+
+<body class="aa">
+    <div style="width:100px; height:100px; background-color:black; position:absolute; color:#fff;" id="ss"></div>
+</body>
+
+</html>
