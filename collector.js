@@ -145,7 +145,7 @@
             //widget dragable
             $targetElement.on('mousewheel', this._onScale.bind(this));
 
-            Draggable.create(widgetSelector,{type:"top,left"});
+            Draggable.create(widgetSelector,{type:"top,left",throwProps:true});
             $targetElement.on('mousedown', this._onDashboardDrag.bind(this));
             //$targetElement.on('mousedown', widgetSelector, this._onWidgetDrag.bind(this));
 
@@ -246,7 +246,7 @@
             $widget.css('left', tx + 'px');
             this.$dashboardElement.append($widget);
             this._widgetsArray.push($widget);
-            new Draggable($widget,{type:"top,left"});
+            //new Draggable($widget,{type:"top,left"});
         },
         _createFileWidgets: function(files){
             var self = this;
@@ -639,9 +639,12 @@
         wapperElement.appendChild(dashboardElement);
 
         //widget for test
-        var testWidget = document.createElement('div');
-        testWidget.className = 'c-widget';
-        dashboardElement.appendChild(testWidget);
+        for(i=0 ;i<10;i++){
+            var testWidget = document.createElement('div');
+            testWidget.className = 'c-widget';
+            dashboardElement.appendChild(testWidget);
+        }
+
 
         return {
             'wapperElement': $(wapperElement),
