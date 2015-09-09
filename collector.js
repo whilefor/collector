@@ -132,6 +132,7 @@
                 height = this._options.height,
                 widgetSelector = '.' + widget_className.trim(),
                 dashboardSelector = '.' + dashboard_className.trim();
+            this.widgetSelector = widgetSelector;
 
             //create elements
             var collectorElements = createCollectorTemplate(width,height,this.minScale);
@@ -143,8 +144,10 @@
 
             //widget dragable
             $targetElement.on('mousewheel', this._onScale.bind(this));
+
+            Draggable.create(widgetSelector,{type:"top,left"});
             $targetElement.on('mousedown', this._onDashboardDrag.bind(this));
-            $targetElement.on('mousedown', widgetSelector, this._onWidgetDrag.bind(this));
+            //$targetElement.on('mousedown', widgetSelector, this._onWidgetDrag.bind(this));
 
             //widget active
             $targetElement.on('mousedown', widgetSelector, this._onWidgetActive.bind(this));
@@ -158,15 +161,19 @@
         _onWidgetActive: function(event){
             event.preventDefault();
             event.stopPropagation();
+            var scaleRate = actDivision(1, this.scale);
             if(this.$activeWidget){
                 this.$activeWidget.removeClass('c-widget-active');
                 this.$activeWidget.find('.c-widget-menu').remove();
-
             }
             $(event.currentTarget).addClass('c-widget-active');
             this.$activeWidget = $(event.currentTarget);
-            var menu = "<div class='c-widget-menu'></div>";
-            this.$activeWidget.append(menu);
+
+            //active menu
+            var $menu = $("<div class='c-widget-menu'></div>");
+            $menu.css('transform', "scale(" + scaleRate + ")");
+            this.$activeWidget.append($menu);
+            
         },
         _onElementDragenter: function(event){
             event.preventDefault();
@@ -239,6 +246,7 @@
             $widget.css('left', tx + 'px');
             this.$dashboardElement.append($widget);
             this._widgetsArray.push($widget);
+            new Draggable($widget,{type:"top,left"});
         },
         _createFileWidgets: function(files){
             var self = this;
@@ -345,6 +353,7 @@
 
             //css scale
             scaleRate = actDivision(1,this.scale);
+            $('.c-widget-menu').css('transform', "scale(" + scaleRate + ")");
 
             //防止滚动后出边界
             var dashboardTop = parseInt($dashboardElement.css('top')) || 0;
