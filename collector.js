@@ -145,9 +145,9 @@
             //widget dragable
             $targetElement.on('mousewheel', this._onScale.bind(this));
 
-            Draggable.create(widgetSelector,{type:"top,left",throwProps:true});
+            //Draggable.create(widgetSelector,{type:"top,left",throwProps:true});
             $targetElement.on('mousedown', this._onDashboardDrag.bind(this));
-            //$targetElement.on('mousedown', widgetSelector, this._onWidgetDrag.bind(this));
+            $targetElement.on('mousedown', widgetSelector, this._onWidgetDrag.bind(this));
 
             //widget active
             $targetElement.on('mousedown', widgetSelector, this._onWidgetActive.bind(this));
@@ -404,6 +404,15 @@
             var scaleSize = this.scale;
             scaleRate = actDivision(1,this.scale);
 
+            //鼠标距离wigget的距离
+            var mouseLeft = event.clientX - this.offset_x;
+            var mouseTop = event.clientY - this.offset_y;
+            //move间隔移动的距离
+            this.perMoveX = (mouseLeft - this.lastX);  
+            this.perMoveY = (mouseTop - this.lastY);
+            this.lastX = mouseLeft;
+            this.lastY = mouseTop;
+
 
             var targetTop = parseInt($target.css('top')) || 0;
             var targetLeft = parseInt($target.css('left')) || 0;
@@ -443,6 +452,11 @@
         _onWidgetDragend: function(event){
             document.onmouseup = null;
             document.onmousemove = null;
+            var $target = this.$target;
+            //drag interia
+            var oLeft = (parseInt($target.css('left')) + this.perMoveX * 7);
+            var oTop = (parseInt($target.css('top')) + this.perMoveY * 7);
+            TweenMax.to($target, 1, {ease: Power3.easeOut, left:oLeft,top:oTop});
         },
         _onDashboardDrag: function(event){
             var $wapperElement = this.$wapperElement,
@@ -471,6 +485,14 @@
             var scaleSize = this.scale;
             scaleRate = actDivision(1,this.scale);
 
+            //鼠标距离wigget的距离
+            var mouseLeft = event.clientX - this.offset_x;
+            var mouseTop = event.clientY - this.offset_y;
+            //move间隔移动的距离
+            this.perMoveX = (mouseLeft - this.lastX);  
+            this.perMoveY = (mouseTop - this.lastY);
+            this.lastX = mouseLeft;
+            this.lastY = mouseTop;
 
             var targetTop = parseInt($target.css('top')) || 0;
             var targetLeft = parseInt($target.css('left')) || 0;
@@ -505,6 +527,11 @@
         },
         _onDashboardDragend: function(event){
             document.onmouseup = document.onmousemove = null;
+            var $target = this.$target;
+            //drag interia
+            var oLeft = (parseInt($target.css('left')) + this.perMoveX * 7);
+            var oTop = (parseInt($target.css('top')) + this.perMoveY * 7);
+            TweenMax.to($target, 1, {ease: Power3.easeOut, left:oLeft,top:oTop});
         },
         _offsetLeftAfterScaling: function(e,oldScale,newScale){
             var $wapperElement    = this.$wapperElement,

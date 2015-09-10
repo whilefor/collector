@@ -44,11 +44,10 @@
         var t = e.clientY - this.dy;
         this.oDiv.style.left = l + 'px';
         this.oDiv.style.top = t + 'px';
-        this.iSpeedX = (l - this.lastX); //move间隔移动的距离
-        this.iSpeedY = (t - this.lastY);
+        this.iSpeedX = (l - this.lastX)*7; //move间隔移动的距离
+        this.iSpeedY = (t - this.lastY)*7;
         this.lastX = l;
         this.lastY = t;
-        //document.title = this.iSpeedX + '|' + this.iSpeedY;  
     }
     Drag.prototype.up = function() {
         document.onmousemove = null;
@@ -56,38 +55,9 @@
         clearInterval(this.timer);
         var _this = this;
 
-        var temp = 50;
-        console.log(_this.iSpeedX);
-        if (_this.iSpeedX >= 0) {
-            if (_this.iSpeedX > temp) {
-                _this.iSpeedX = temp;
-            }
-        } else {
-            if (_this.iSpeedX < -temp) {
-                _this.iSpeedX = -temp;
-            }
-        }
-
-        if (_this.iSpeedY >= 0) {
-            if (_this.iSpeedY > temp) {
-                _this.iSpeedY = temp;
-            }
-        } else {
-            if (_this.iSpeedY < -temp) {
-                _this.iSpeedY = -temp;
-            }
-        }
-
-        this.timer = setInterval(function() {
-            _this.iSpeedX *= 0.97; //move间隔移动的距离
-            _this.iSpeedY *= 0.97;
-            _this.oDiv.style.left = _this.oDiv.offsetLeft + _this.iSpeedX + 'px';
-            _this.oDiv.style.top = _this.oDiv.offsetTop + _this.iSpeedY + 'px';
-            if ((_this.iSpeedX | 0) == 0 || (_this.iSpeedY | 0) == 0) {
-                clearInterval(_this.timer);
-            }
-            //document.title = _this.iSpeedY;
-        }, 10)
+        var oLeft = (_this.oDiv.offsetLeft + _this.iSpeedX);
+        var oTop = (_this.oDiv.offsetTop + _this.iSpeedY);
+        TweenMax.to(_this.oDiv, 1, { ease: Power3.easeOut, left:oLeft,top:oTop});
     }
 
     //继承
@@ -119,66 +89,6 @@
         this.oDiv.style.left = l + 'px';
         this.oDiv.style.top = t + 'px';
     }
-
-
-    /*
-         * 动画帧函数
-         *
-         * */
-
-        var requestFrame=function(){
-            var prefixList=['webkit','moz','ms'];
-            var func;
-            for(var i=0;i<prefixList.length;i++){
-                func=window[prefixList[i]+"RequestAnimationFrame"];
-                if(func){
-                    return function(callback){
-                        func(callback);
-                    }
-                }
-            }
-            return function(callback){
-                setTimeout(callback,67);
-            }
-        }();
-
-
-    /*
-     * 匀减速运动
-     *
-     * */
-    function animate_easeOut(element, from, to, duration, callback) {
-        var time = +new Date;
-        var distance = Math.abs(to - from);
-        var a = 2 * distance / (duration * duration); //x=a*t^2/2  求出加速度 
-        var v0 = Math.sqrt(distance * 2 * a); // 根据公式：求出初速度
-
-
-
-
-
-        var func = function() {
-            var time2, offsetDis, durTime, pos;
-            time2 = +new Date;
-            durTime = time2 - time;
-            offsetDis = Math.ceil(v0 * durTime - a * durTime * durTime / 2); //根据求出位移x
-
-
-            if (duration < durTime) {
-                element.css('left', to + 'px');
-                callback();
-            } else {
-                pos = from > to ? from - offsetDis : from + offsetDis;
-                element.css('left', pos + 'px');
-                requestFrame(func);
-            }
-
-
-        }
-
-
-        func();
-    }
     </script>
 </head>
 
@@ -187,6 +97,14 @@
     <!-- 
     <div id="div1" style="width:100px;height:100px;background:blue;position:absolute;left:20px;top:150px"></div>
     <div id="div2" style="width:100px;height:100px;background:orange;position:absolute;left:20px;top:300px"></div> -->
+    <script type="text/javascript" src="./lib/jquery-2.1.4.js"></script>
+    <script type="text/javascript" src="./lib/jquery.mousewheel.js"></script>
+
+    <script type="text/javascript" src="./lib/greensock-js/src/minified/jquery.gsap.min.js"></script>
+    <script type="text/javascript" src="./lib/greensock-js/src/minified/TweenMax.min.js"></script>
+    <script type="text/javascript" src="./lib/greensock-js/src/minified/easing/EasePack.min.js"></script>
+    <script type="text/javascript" src="./lib/greensock-js/src/minified/utils/Draggable.min.js"></script>
+
 </body>
 
 </html>
