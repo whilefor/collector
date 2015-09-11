@@ -137,10 +137,11 @@
             //create elements
             var collectorElements = createCollectorTemplate(width,height,this.minScale);
             this.$wapperElement    = collectorElements.wapperElement;
-            this.$dashboardElement = collectorElements.dashboardElement;
+
 
             //put the wapper element into the selected element
             this.$targetElement.append(collectorElements.wapperElement);
+            this.$dashboardElement = $('.c-dashboard');
 
             //widget dragable
             $targetElement.on('mousewheel', this._onScale.bind(this));
@@ -173,8 +174,9 @@
             var $menu = $("<div class='c-widget-menu'></div>");
             $menu.css('transform', "scale(" + scaleRate + ")");
             this.$activeWidget.append($menu);
-            
         },
+
+        //wigdet drop----------------------------------------------------------------------------------
         _onElementDragenter: function(event){
             event.preventDefault();
             event.stopPropagation();
@@ -292,8 +294,9 @@
             }
         },
         _createHtmlWidgets: function(html){
-            
         },
+
+        //scale----------------------------------------------------------------------------------------
         _onScale: function(event){
             var delta = event.deltaY;
             event.preventDefault();
@@ -379,6 +382,8 @@
                 $dashboardElement.css('left', '0px');
             }
         },
+
+        //widget drag----------------------------------------------------------------------------------
         _onWidgetDrag: function(event){
             var $wapperElement = this.$wapperElement,
                 $dashboardElement = this.$dashboardElement,
@@ -386,16 +391,9 @@
             //传递给_onWidgetDraging和_onWidgetDragend
             this.$target = $target;
 
-            //stop animation
-            TweenMax.killAll();
-            //animation init 
-            this.perMoveX = 0;  
-            this.perMoveY = 0;
-            this.lastX = 0;
-            this.lastY = 0;
+            this._animationStart();
 
-
-            scaleRate = actDivision(1,this.scale);
+            var scaleRate = actDivision(1,this.scale);
             if(isWidgetElement($target)){
                 this.offset_x = event.clientX * scaleRate - event.currentTarget.offsetLeft;
                 this.offset_y = event.clientY * scaleRate - event.currentTarget.offsetTop;
@@ -413,15 +411,8 @@
             var scaleSize = this.scale;
             scaleRate = actDivision(1,this.scale);
 
-            //鼠标距离wigget的距离
-            var mouseLeft = event.clientX - this.offset_x;
-            var mouseTop = event.clientY - this.offset_y;
-            //move间隔移动的距离
-            this.perMoveX = (mouseLeft - this.lastX);  
-            this.perMoveY = (mouseTop - this.lastY);
-            this.lastX = mouseLeft;
-            this.lastY = mouseTop;
-
+            //record mouse speed
+            this._animationRecord(event);
 
             var targetTop = parseInt($target.css('top')) || 0;
             var targetLeft = parseInt($target.css('left')) || 0;
@@ -442,7 +433,7 @@
             var maxTop = dashboardHeight - targetHeight;
             var maxLeft = dashboardWidth - targetWidth;
 
-            boundsLimit({
+            this._boundsLimit({
                 target: $target,
                 top:  top,
                 left: left,
@@ -453,49 +444,19 @@
             });
         },
         _onWidgetDragend: function(event){
-            document.onmouseup = null;
-            document.onmousemove = null;
-            var $target = this.$target;
-            //防止widget出dashboard边界
-            var targetWidth = parseInt($target.width());
-            var targetHeight = parseInt($target.height());
-            var dashboardWidth = $target.parent().width();
-            var dashboardHeight = $target.parent().height();
-
-            var maxTop = dashboardHeight - targetHeight;
-            var maxLeft = dashboardWidth - targetWidth;
-
-            //drag interia
-            var top = parseInt($target.css('top'));
-            var left = parseInt($target.css('left'));
-            var oLeft = left + this.perMoveX * 8;
-            var oTop = top + this.perMoveY * 8;
-            TweenMax.to($target, 1, {ease: Power3.easeOut, left:oLeft,top:oTop})
-            .eventCallback('onUpdate', function(){
-                boundsLimit({
-                    target: $target,
-                    //top:  top,
-                    //left: left,
-                    maxTop: maxTop,
-                    maxLeft: maxLeft,
-                    cHeight: dashboardHeight,
-                    cWidth: dashboardWidth
-                });
-            });
+            document.onmouseup = document.onmousemove = null;
+            this._animationUpdate();
         },
+
+        //dashboard drag----------------------------------------------------------------------------------
         _onDashboardDrag: function(event){
             var $wapperElement = this.$wapperElement,
                 $dashboardElement = this.$dashboardElement,
                 $targetElement = this.$targetElement,
                 $target = $(event.target);
             this.$target = $(event.target);
-            //animation stop
-            TweenMax.killAll();
-            //animation init 
-            this.perMoveX = 0;  
-            this.perMoveY = 0;
-            this.lastX = 0;
-            this.lastY = 0;
+
+            this._animationStart();
 
             scaleRate = actDivision(1,this.scale);
 
@@ -517,14 +478,8 @@
             var scaleSize = this.scale;
             var scaleRate = actDivision(1,this.scale);
 
-            //鼠标距离wigget的距离
-            var mouseLeft = event.clientX - this.offset_x;
-            var mouseTop = event.clientY - this.offset_y;
-            //move间隔移动的距离
-            this.perMoveX = (mouseLeft - this.lastX);  
-            this.perMoveY = (mouseTop - this.lastY);
-            this.lastX = mouseLeft;
-            this.lastY = mouseTop;
+            //record mouse speed
+            this._animationRecord(event);
 
             var targetTop = parseInt($target.css('top')) || 0;
             var targetLeft = parseInt($target.css('left')) || 0;
@@ -539,7 +494,7 @@
             var left = event.clientX * scaleRate - this.offset_x;
 
             //防止dashboard出container边界
-            boundsLimit({
+            this._boundsLimit({
                 target: $target,
                 top:  top,
                 left: left,
@@ -549,29 +504,152 @@
         },
         _onDashboardDragend: function(event){
             document.onmouseup = document.onmousemove = null;
+            this._animationUpdate({'isDashboard': true});
+        },
+
+        //animation
+        _animationStart: function(){
+            //stop all animation
+            if(!this._isBounds){
+                TweenMax.killAll();
+            }
+            //init animation
+            this.perMoveX = 0;  
+            this.perMoveY = 0;
+            this.lastX = 0;
+            this.lastY = 0;
+        },
+        _animationRecord: function(event){
+            //鼠标距离wigget的top, left
+            var mouseLeft = event.clientX - this.offset_x;
+            var mouseTop = event.clientY - this.offset_y;
+
+            this.perMoveX = (mouseLeft - this.lastX);  
+            this.perMoveY = (mouseTop - this.lastY);
+            this.lastX = mouseLeft;
+            this.lastY = mouseTop;
+        },
+        _animationUpdate: function(option){
+            var isDashboard = option && option.isDashboard;
             var $target = this.$target;
-            var $targetElement = this.$targetElement;
-            var containerWidth = parseInt($targetElement.width());
-            var containerHeight = parseInt($targetElement.height());
+            var self = this;
+
+            //防止widget出dashboard边界
+            var targetWidth  = parseInt($target.width());
+            var targetHeight = parseInt($target.height());
             var scaleSize = this.scale;
             var scaleRate = actDivision(1,this.scale);
 
-            //drag interia
-            var top = parseInt($target.css('top'));
-            var left = parseInt($target.css('left'));
-            var oLeft = left + this.perMoveX * 8;
-            var oTop = top + this.perMoveY * 8;
-            TweenMax.to($target, 1, {ease: Power3.easeOut, left:oLeft,top:oTop})
-            .eventCallback('onUpdate', function(){
-                boundsLimit({
+            var cWidth  = $target.parent().width();
+            var cHeight = $target.parent().height();
+
+            var maxTop  = cWidth - targetHeight;
+            var maxLeft = cHeight - targetWidth;
+
+            if(isDashboard){
+                var $targetElement = this.$targetElement;
+                var containerWidth = parseInt($targetElement.width());
+                var containerHeight = parseInt($targetElement.height());
+
+                cWidth  = containerWidth * scaleRate;
+                cHeight = containerHeight * scaleRate;
+                maxTop  = null;
+                maxLeft = null;
+            }
+
+            var oLeft = parseInt($target.css('left')) + this.perMoveX * 7 * scaleRate;
+            var oTop  = parseInt($target.css('top'))  + this.perMoveY * 7 * scaleRate;
+            this._ineria = TweenMax.to($target, 1, {ease: Power3.easeOut, left:oLeft,top:oTop});
+
+            //出边界之后惯性动画复位
+            var isBounds; self._isBounds = false;
+            this._ineria.eventCallback('onUpdate', function(){
+                if(isBounds){
+                    self._isBounds = true;
+                    var oLeft = parseInt($target.css('left')) + self.perMoveX * 1 * scaleRate;
+                    var oTop  = parseInt($target.css('top'))  + self.perMoveY * 1 * scaleRate;
+                    self._ineria.kill();
+                    TweenMax.to($target, 0.3, {ease: Power3.easeOut, left:oLeft,top:oTop})
+                    .eventCallback('onComplete', function(){
+                        var top  = parseInt($target.css('top'));
+                        var left = parseInt($target.css('left'));
+                        top = top > maxTop ? maxTop : top;
+                        top = top < 0 ? 0 : top;
+                        left = left > maxLeft ? maxLeft : left;
+                        left = left < 0 ? 0 : left;
+                        TweenMax.to($target, 0.5, {ease: Power3.easeOut, left:left,top:top})
+                    });
+                    return;
+                }
+                isBounds = self._boundsLimit({
                     target: $target,
-                    //top:  top,
-                    //left: left,
-                    cHeight: containerHeight * scaleRate,
-                    cWidth: containerWidth * scaleRate 
+                    maxTop: maxTop,
+                    maxLeft: maxLeft,
+                    cHeight: cHeight,
+                    cWidth: cWidth
                 });
             });
         },
+        _boundsLimit: function(option){
+            var $target = option.target,
+                top     = option.top || parseInt($target.css('top')),
+                left    = option.left || parseInt($target.css('left')),
+                cHeight = option.cHeight,
+                cWidth  = option.cWidth;
+
+            var targetWidth = parseInt($target.width());
+            var targetHeight = parseInt($target.height());
+
+            //目标元素高度小于容器高度
+            if (targetHeight < cHeight) {
+                if (top > 0) {
+                    if((top + targetHeight) >= cHeight){
+                        return true
+                    }
+                    else{
+                        $target.css('top', top + "px");
+                    }
+                } else {
+                    return true;
+                }
+            } else {
+                if (top > 0) {
+                    $target.css('top', "0px");
+                } else {
+                    if ((Math.abs(top) + cHeight) > targetHeight) {
+                        $target.css('top', -(targetHeight - cHeight) + 'px');
+                    } else {
+                        $target.css('top', top + "px");
+                    }
+                }
+            }
+             //目标元素宽度小于容器宽度
+            if (targetWidth < cWidth) {
+                if (left > 0) {
+                    if((left + targetWidth) >= cWidth){
+                        return true
+                    }
+                    else{
+                        $target.css('left', left + "px");
+                    }
+                } else {
+                    return true;
+                }
+            } else {
+                if (left > 0) {
+                    $target.css('left', "0px");
+                } else {
+                    if ((Math.abs(left) + cWidth) > targetWidth) {
+                        $target.css('left', -(targetWidth - cWidth) + 'px');
+                    } else {
+                        $target.css('left', left + "px");
+                    }
+                }
+            }
+        },
+
+
+        //element config----------------------------------------------------------------------------------
         _offsetLeftAfterScaling: function(e,oldScale,newScale){
             var $wapperElement    = this.$wapperElement,
                 $dashboardElement = this.$dashboardElement,
@@ -641,7 +719,7 @@
         }
     };
     c.prototype.constructor 
-
+//---------------c----------------------------------------------------------------------------------
     function isWapperElement ($elem){
         if($elem.hasClass('c-wapper')){
             return true;
@@ -686,35 +764,27 @@
         return (arg1*m+arg2*m)/m;
     }
 
-
-    function blank () {}
+    function blank(){}
     function createCollectorTemplate(width,height,scale){
         var width = width || "10000px";
         var height = height || "10000px";
 
-        //wapper
-        var wapperElement = document.createElement('div');
-        wapperElement.className = 'c-wapper';
-        wapperElement.style.width = width;
-        wapperElement.style.height = height;
-        wapperElement.style.transform = 'scale(' + scale + ')';
-
-        //dashboard
-        var dashboardElement = document.createElement('div');
-        dashboardElement.className = 'c-dashboard';
-        wapperElement.appendChild(dashboardElement);
-
         //widget for test
+        var widgets = '';
         for(i=0 ;i<10;i++){
-            var testWidget = document.createElement('div');
-            testWidget.className = 'c-widget';
-            dashboardElement.appendChild(testWidget);
+            widgets += '<div class="c-widget"></div>';
         }
 
-
+        //wapper
+        var $wapperElement = $(
+            '<div class="c-wapper" id="c-wapper" style="width:' + width + ';height:' + height + ';transform: scale(' + scale + ');">'+
+                '<div class="c-dashboard" id="c-dashboard"> '+
+                    widgets +
+                '</div>' +
+            '</div>'
+        );
         return {
-            'wapperElement': $(wapperElement),
-            'dashboardElement': $(dashboardElement)
+            'wapperElement': $wapperElement
             };
     }
 
@@ -730,13 +800,30 @@
         var targetWidth = parseInt($target.width());
         var targetHeight = parseInt($target.height());
 
+
+        var isBounds; // 1 is, 2 not 
         //目标元素高度小于容器高度
         if (targetHeight < cHeight) {
             if (top > 0) {
                 (top + targetHeight) >= cHeight
-                    ? $target.css('top', maxTop + "px") : $target.css('top', top + "px");
+                    ? $target.css('top', maxTop + "px")
+                    //? TweenMax.to($target, 1, { ease: Back.easeOut.config(1.7), left: maxLeft,top: maxTop });
+                    : $target.css('top', top + "px");
+                    isBounds = false;
             } else {
-                $target.css('top', "0px");
+                if(isBounds){
+                TweenMax.to($target, 1, { ease: Back.easeOut.config(3.7), top: '0px' })
+                    .eventCallback('onComplete', function(){
+                        isBounds = false;
+                    });
+                }
+                
+                
+
+                // if(isBounds){
+                //     TweenMax.to($target, 1, { ease: Back.easeOut.config(1.7), top: '0px' });
+                // }
+                //$target.css('top', "0px");
             }
         } else {
             if (top > 0) {
@@ -755,7 +842,11 @@
                 (left + targetWidth) >= cWidth
                     ? $target.css('left', maxLeft + "px") : $target.css('left', left + "px");
             } else {
-                $target.css('left', "0px");
+                if(!TweenMax.isActive()){
+                    TweenMax.to($target, 1, { ease: Back.easeOut.config(3.7), left: '0px' });
+                }
+                //TweenMax.to($target, 1, { ease: Back.easeOut.config(1.7), left: '0px' });
+                //$target.css('left', "0px");
             }
         } else {
             if (left > 0) {

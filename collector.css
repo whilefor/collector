@@ -2,11 +2,14 @@
   position:relative;
   transform-origin:0px 0px;
   display:block;
-  background-color: #999;
     -webkit-user-select:none;
     -moz-user-select:none;
     -ms-user-select:none;
     user-select:none;
+}
+.c-wapper canvas{
+  width: 100%;
+  height: 100%;
 }
 .c-dashboard{
   position:absolute;
@@ -14,6 +17,8 @@
   left:0px;top:0px;
   z-index:-9999;
   background-color: #2E85DC;
+  background: #FFF url('./img/congruent_outline.png') repeat;
+  background-size: 10%;
 }
 .c-widget{
   position: absolute;
