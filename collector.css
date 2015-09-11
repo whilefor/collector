@@ -13,6 +13,7 @@
   width:100%; height:100%;
   left:0px;top:0px;
   z-index:-9999;
+  background-color: #2E85DC;
 }
 .c-widget{
   position: absolute;

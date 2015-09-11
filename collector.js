@@ -386,6 +386,15 @@
             //传递给_onWidgetDraging和_onWidgetDragend
             this.$target = $target;
 
+            //stop animation
+            TweenMax.killAll();
+            //animation init 
+            this.perMoveX = 0;  
+            this.perMoveY = 0;
+            this.lastX = 0;
+            this.lastY = 0;
+
+
             scaleRate = actDivision(1,this.scale);
             if(isWidgetElement($target)){
                 this.offset_x = event.clientX * scaleRate - event.currentTarget.offsetLeft;
@@ -433,30 +442,46 @@
             var maxTop = dashboardHeight - targetHeight;
             var maxLeft = dashboardWidth - targetWidth;
 
-            if(top > 0){
-              (top + targetHeight) >= dashboardHeight
-                ? $target.css('top', maxTop + "px") : $target.css('top', top+ "px");
-            }
-            else{
-              $target.css('top', "0px");
-            }
-
-            if(left >0){
-              (left + targetWidth) >= dashboardWidth
-                ? $target.css('left', maxLeft + "px") : $target.css('left', left+ "px");
-            }
-            else{
-              $target.css('left', "0px");
-            }
+            boundsLimit({
+                target: $target,
+                top:  top,
+                left: left,
+                maxTop: maxTop,
+                maxLeft: maxLeft,
+                cHeight: dashboardHeight,
+                cWidth: dashboardWidth
+            });
         },
         _onWidgetDragend: function(event){
             document.onmouseup = null;
             document.onmousemove = null;
             var $target = this.$target;
+            //防止widget出dashboard边界
+            var targetWidth = parseInt($target.width());
+            var targetHeight = parseInt($target.height());
+            var dashboardWidth = $target.parent().width();
+            var dashboardHeight = $target.parent().height();
+
+            var maxTop = dashboardHeight - targetHeight;
+            var maxLeft = dashboardWidth - targetWidth;
+
             //drag interia
-            var oLeft = (parseInt($target.css('left')) + this.perMoveX * 7);
-            var oTop = (parseInt($target.css('top')) + this.perMoveY * 7);
-            TweenMax.to($target, 1, {ease: Power3.easeOut, left:oLeft,top:oTop});
+            var top = parseInt($target.css('top'));
+            var left = parseInt($target.css('left'));
+            var oLeft = left + this.perMoveX * 7;
+            var oTop = top + this.perMoveY * 7;
+            TweenMax.to($target, 1, {ease: Power3.easeOut, left:oLeft,top:oTop})
+            .eventCallback('onUpdate', function(){
+                boundsLimit({
+                    target: $target,
+                    top:  top,
+                    left: left,
+                    maxTop: maxTop,
+                    maxLeft: maxLeft,
+                    cHeight: dashboardHeight,
+                    cWidth: dashboardWidth
+                });
+            });
         },
         _onDashboardDrag: function(event){
             var $wapperElement = this.$wapperElement,
@@ -464,6 +489,13 @@
                 $targetElement = this.$targetElement,
                 $target = $(event.target);
             this.$target = $(event.target);
+            //animation stop
+            TweenMax.killAll();
+            //animation init 
+            this.perMoveX = 0;  
+            this.perMoveY = 0;
+            this.lastX = 0;
+            this.lastY = 0;
 
             scaleRate = actDivision(1,this.scale);
 
@@ -483,7 +515,7 @@
             $target.css('cursor', "pointer");
             $target.css('position', "absolute");
             var scaleSize = this.scale;
-            scaleRate = actDivision(1,this.scale);
+            var scaleRate = actDivision(1,this.scale);
 
             //鼠标距离wigget的距离
             var mouseLeft = event.clientX - this.offset_x;
@@ -507,31 +539,38 @@
             var left = event.clientX * scaleRate - this.offset_x;
 
             //防止dashboard出container边界
-            var maxTop = -(targetHeight - containerHeight * scaleRate);
-            var maxLeft = -(targetWidth - containerWidth * scaleRate);
-            if(top <= 0){
-              (Math.abs(top) + containerHeight * scaleRate) >= targetHeight
-                ? $target.css('top', maxTop + "px") : $target.css('top', top+ "px");
-            }
-            else{
-                $target.css('top', "0px");
-            }
-
-            if(left <=0){
-              (Math.abs(left) + containerWidth * scaleRate) >= targetWidth
-                ? $target.css('left', maxLeft + "px") : $target.css('left', left+ "px");
-            }
-            else{
-               $target.css('left', "0px");
-            }
+            boundsLimit({
+                target: $target,
+                top:  top,
+                left: left,
+                cHeight: containerHeight * scaleRate,
+                cWidth: containerWidth * scaleRate 
+            });
         },
         _onDashboardDragend: function(event){
             document.onmouseup = document.onmousemove = null;
             var $target = this.$target;
+            var $targetElement = this.$targetElement;
+            var containerWidth = parseInt($targetElement.width());
+            var containerHeight = parseInt($targetElement.height());
+            var scaleSize = this.scale;
+            var scaleRate = actDivision(1,this.scale);
+
             //drag interia
-            var oLeft = (parseInt($target.css('left')) + this.perMoveX * 7);
-            var oTop = (parseInt($target.css('top')) + this.perMoveY * 7);
-            TweenMax.to($target, 1, {ease: Power3.easeOut, left:oLeft,top:oTop});
+            var top = parseInt($target.css('top'));
+            var left = parseInt($target.css('left'));
+            var oLeft = left + this.perMoveX * 7;
+            var oTop = top + this.perMoveY * 7;
+            TweenMax.to($target, 1, {ease: Power3.easeOut, left:oLeft,top:oTop})
+            .eventCallback('onUpdate', function(){
+                boundsLimit({
+                    target: $target,
+                    top:  top,
+                    left: left,
+                    cHeight: containerHeight * scaleRate,
+                    cWidth: containerWidth * scaleRate 
+                });
+            });
         },
         _offsetLeftAfterScaling: function(e,oldScale,newScale){
             var $wapperElement    = this.$wapperElement,
@@ -678,6 +717,59 @@
             'dashboardElement': $(dashboardElement)
             };
     }
+
+    function boundsLimit(option) {
+        var $target = option.target,
+            top     = option.top,
+            left    = option.left,
+            maxTop  = option.maxTop,
+            maxLeft = option.maxLeft,
+            cHeight = option.cHeight,
+            cWidth  = option.cWidth;
+
+        var targetWidth = parseInt($target.width());
+        var targetHeight = parseInt($target.height());
+
+        //目标元素高度小于容器高度
+        if (targetHeight < cHeight) {
+            if (top > 0) {
+                (top + targetHeight) >= cHeight
+                    ? $target.css('top', maxTop + "px") : $target.css('top', top + "px");
+            } else {
+                $target.css('top', "0px");
+            }
+        } else {
+            if (top > 0) {
+                $target.css('top', "0px");
+            } else {
+                if ((Math.abs(top) + cHeight) > targetHeight) {
+                    $target.css('top', -(targetHeight - cHeight) + 'px');
+                } else {
+                    $target.css('top', top + "px");
+                }
+            }
+        }
+         //目标元素宽度小于容器宽度
+        if (targetWidth < cWidth) {
+            if (left > 0) {
+                (left + targetWidth) >= cWidth
+                    ? $target.css('left', maxLeft + "px") : $target.css('left', left + "px");
+            } else {
+                $target.css('left', "0px");
+            }
+        } else {
+            if (left > 0) {
+                $target.css('left', "0px");
+            } else {
+                if ((Math.abs(left) + cWidth) > targetWidth) {
+                    $target.css('left', -(targetWidth - cWidth) + 'px');
+                } else {
+                    $target.css('left', left + "px");
+                }
+            }
+        }
+    }
+
 
     function isElement (obj) {
         return !!(obj && obj.nodeType === 1);
