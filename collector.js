@@ -468,14 +468,14 @@
             //drag interia
             var top = parseInt($target.css('top'));
             var left = parseInt($target.css('left'));
-            var oLeft = left + this.perMoveX * 7;
-            var oTop = top + this.perMoveY * 7;
+            var oLeft = left + this.perMoveX * 8;
+            var oTop = top + this.perMoveY * 8;
             TweenMax.to($target, 1, {ease: Power3.easeOut, left:oLeft,top:oTop})
             .eventCallback('onUpdate', function(){
                 boundsLimit({
                     target: $target,
-                    top:  top,
-                    left: left,
+                    //top:  top,
+                    //left: left,
                     maxTop: maxTop,
                     maxLeft: maxLeft,
                     cHeight: dashboardHeight,
@@ -559,14 +559,14 @@
             //drag interia
             var top = parseInt($target.css('top'));
             var left = parseInt($target.css('left'));
-            var oLeft = left + this.perMoveX * 7;
-            var oTop = top + this.perMoveY * 7;
+            var oLeft = left + this.perMoveX * 8;
+            var oTop = top + this.perMoveY * 8;
             TweenMax.to($target, 1, {ease: Power3.easeOut, left:oLeft,top:oTop})
             .eventCallback('onUpdate', function(){
                 boundsLimit({
                     target: $target,
-                    top:  top,
-                    left: left,
+                    //top:  top,
+                    //left: left,
                     cHeight: containerHeight * scaleRate,
                     cWidth: containerWidth * scaleRate 
                 });
@@ -720,8 +720,8 @@
 
     function boundsLimit(option) {
         var $target = option.target,
-            top     = option.top,
-            left    = option.left,
+            top     = option.top || parseInt($target.css('top')),
+            left    = option.left || parseInt($target.css('left')),
             maxTop  = option.maxTop,
             maxLeft = option.maxLeft,
             cHeight = option.cHeight,

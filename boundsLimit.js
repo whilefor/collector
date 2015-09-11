@@ -14,7 +14,7 @@ function boundsLimit(option) {
     if (targetHeight < cHeight) {
         if (top > 0) {
             (top + targetHeight) >= cHeight
-                ? $target.css('top', maxTop + "px") : $target.css('top', top + "px");
+                ? $target.css('top', maxTop + "px") : (top ? $target.css('top', top + "px"): '');
         } else {
             $target.css('top', "0px");
         }
@@ -33,7 +33,7 @@ function boundsLimit(option) {
     if (targetWidth < cWidth) {
         if (left > 0) {
             (left + targetWidth) >= cWidth
-                ? $target.css('left', maxLeft + "px") : $target.css('left', left + "px");
+                ? $target.css('left', maxLeft + "px") : ( left ? $target.css('left', left + "px"): '');
         } else {
             $target.css('left', "0px");
         }
