@@ -537,7 +537,6 @@
                 $target.css('top',  top  + "px");
                 $target.css('left', left + "px");               
             }
-
         },
         _onDashboardDragend: function(event){
             document.onmouseup = document.onmousemove = null;
@@ -594,23 +593,71 @@
                 maxLeft = null;
             }
 
-            var oLeft = parseInt($target.css('left')) + this.perMoveX * 7 * scaleRate;
-            var oTop  = parseInt($target.css('top'))  + this.perMoveY * 7 * scaleRate;
-            this._ineria = TweenMax.to($target, 1, {ease: Expo.easeOut, left:oLeft,top:oTop});
 
-            //出边界之后惯性动画复位
-            var decelerateSpeed = isDashboard ? 0.1 : 0.2;  //减速度
-            var accelerateSpeed = isDashboard ? 0.1 : 0.2;  //加速度
+            //拖动后惯性移动
+            var isInertiaAnimation = true;
+            var inertiaThresholdSpeed  = 5;            //拖拽后惯性移动阀值速度，小于该速度则直接贴近边界
+            var inertiaDecelerateSpeed = 20;           //拖拽后惯性移动减速度，数字越大移动越大
+            var inertiaEasingType = Power2.easeOut;    //惯性移动动画曲线
+            var nearByDistanceRate = 0.005;            //距离边界多少百分比之后直接贴近
+            this.perMoveX = Math.abs(this.perMoveX) > 500 ? 0: this.perMoveX;  //防止异常的速度
+            this.perMoveY = Math.abs(this.perMoveY) > 500 ? 0: this.perMoveY;
+            console.log(this.perMoveX, this.perMoveY);
+            var oLeft = parseInt($target.css('left')) + this.perMoveX * inertiaDecelerateSpeed * scaleRate;
+            var oTop  = parseInt($target.css('top'))  + this.perMoveY * inertiaDecelerateSpeed * scaleRate;
+            if(!isDashboard){
+                //接近边界之后直接贴边效果
+                var oDistance = this._toBoundsDistance({   //惯性移动后离边界的距离
+                        target:  $target, oTop:    oTop,    oLeft:   oLeft,
+                        cHeight: cHeight, cWidth:  cWidth,
+                        perMoveX: this.perMoveX, perMoveY: this.perMoveY
+                });
+                if(oDistance.top > 0 && oDistance.top < cHeight * nearByDistanceRate){
+                    oTop = this.perMoveY < 0 ? 0 : cHeight;
+                }
+                if(oDistance.left > 0 && oDistance.left < cWidth * nearByDistanceRate){
+                    oLeft = this.perMoveX < 0 ? 0 : cWidth;
+                }
+                console.log(this.perMoveY);
+
+
+                //小于阀值速度则贴近边界
+                if(oDistance.top <= 0 && Math.abs(this.perMoveY) <= inertiaThresholdSpeed){
+                    oTop = this.perMoveY < 0 ? 0 : cHeight;
+                }
+                if(oDistance.left <= 0 && Math.abs(this.perMoveX) <= inertiaThresholdSpeed){
+                    oLeft = this.perMoveX < 0 ? 0 : cWidth;
+                }
+            }
+            this._ineria = TweenMax.to($target, 1, {ease: inertiaEasingType, left: oLeft, top: oTop});
+            if(!isInertiaAnimation){
+                return;
+            }
+
+
+
+            //移动出边界之后惯性动画复位
+            var decelerateTime = isDashboard ? 0.1 : 0.2;  //出边界之后惯性移动减速到静止的时间
+            var accelerateTime = isDashboard ? 0.1 : 0.2;  //出边界之后惯性移动加速到静止的时间
+            var resetEasingType = Power2.easeOut;          //复位移动动画曲线
+            var resetSpeed = 2;  //出边界之后惯性移动距离
             var isBounds; self._isBounds = false;
             this._ineria.eventCallback('onUpdate', function(){
                 if(isBounds){
                     self._isBounds = true;
-                    var oLeft = parseInt($target.css('left')) + self.perMoveX * 1 * scaleRate;
-                    var oTop  = parseInt($target.css('top'))  + self.perMoveY * 1 * scaleRate;
+                    var cTop = parseInt($target.css('top')) ;
+                    var cLeft = parseInt($target.css('left'));
+                    // var cTop = parseInt($target.css('top')) > 0 ? parseInt($target.css('top')) : 0;
+                    // var cLeft = parseInt($target.css('left')) > 0 ? parseInt($target.css('left')) : 0;
+                    var oLeft = cLeft + self.perMoveX * resetSpeed * scaleRate;
+                    var oTop  = cTop  + self.perMoveY * resetSpeed * scaleRate;
                     self._ineria.kill();
 
                     //惯性减速
-                    TweenMax.to($target, decelerateSpeed, {ease: Expo.easeOut, left:oLeft,top:oTop})
+                    var oldTop  = parseInt($target.css('top'));
+                    var oldLeft = parseInt($target.css('left'));
+                    console.log(cTop, cLeft);
+                    TweenMax.to($target, decelerateTime, {ease: resetEasingType, left:oLeft,top:oTop})
                     .eventCallback('onComplete', function(){
                         var top  = parseInt($target.css('top'));
                         var left = parseInt($target.css('left'));
@@ -626,10 +673,19 @@
                             top = top < 0 ? 0 : top;
                             left = left > maxLeft ? maxLeft : left;
                             left = left < 0 ? 0 : left;
+                            // top = top > maxTop ? maxTop : top + (top - oldTop + targetHeight);
+                            // top = top < 0 ? 0 : top + (top - oldTop + targetHeight);
+                            // left = left > maxLeft ? maxLeft : left + (left - oldLeft + targetWidth);
+                            // left = left < 0 ? 0 : left  + (left - oldLeft + targetWidth);
                         }
                         //惯性加速复位
-                        TweenMax.to($target, accelerateSpeed, {ease: Expo.easeOut, left:left,top:top})
+                        TweenMax.to($target, accelerateTime, {ease: resetEasingType, left:left,top:top})
                     });
+                    
+
+                    //TweenMax.to($target, decelerateTime, {ease: resetEasingType, left:oLeft,top:oTop, repeat:1, yoyo:true});
+
+
                     return;
                 }
                 isBounds = self._boundsLimit({
@@ -651,8 +707,8 @@
 
             //目标元素高度小于容器高度
             if (targetHeight < cHeight) {
-                if (top > 0) {
-                    if((top + targetHeight) >= cHeight){
+                if (top >= 0) {
+                    if((top + targetHeight) > cHeight){
                         return true;
                     }
                     else{
@@ -674,8 +730,8 @@
             }
              //目标元素宽度小于容器宽度
             if (targetWidth < cWidth) {
-                if (left > 0) {
-                    if((left + targetWidth) >= cWidth){
+                if (left >= 0) {
+                    if((left + targetWidth) > cWidth){
                         return true;
                     }
                     else{
@@ -695,6 +751,59 @@
                     }
                 }
             }
+        },
+        _toBoundsDistance: function(option){
+            var oTop = option.oTop,
+                oLeft = option.oLeft,
+                cHeight = option.cHeight,
+                cWidth  = option.cWidth,
+                $target = option.target,
+                perMoveX = option.perMoveX,
+                perMoveY = option.perMoveY;
+
+            var targetWidth = parseInt($target.width());
+            var targetHeight = parseInt($target.height());
+
+            var oDistance = {};
+
+            //目标元素高度小于容器高度
+            if (targetHeight <= cHeight) {
+                if (oTop >= 0) {
+                    if((oTop + targetHeight) >= cHeight){
+                        oDistance.top = -(oTop - cHeight - targetHeight); 
+                    }
+                    else{
+                        //移动的方向判断
+                        perMoveY >= 0
+                            ? oDistance.top = cHeight - oTop - targetHeight //下
+                            : oDistance.top = oTop; //上
+                    }
+                } else {
+                    oDistance.top = oTop;
+                }
+            } else {
+                
+            }
+             //目标元素宽度小于容器宽度
+            if (targetWidth <= cWidth) {
+                if (oLeft >= 0) {
+                    if((oLeft + targetWidth) >= cWidth){
+                        oDistance.left = -(oLeft - cWidth - targetWidth); 
+                    }
+                    else{
+                        //移动的方向判断
+                        perMoveX >= 0
+                            ? oDistance.left = cWidth - oLeft - targetWidth //右
+                            : oDistance.left = oLeft; //左
+                    }
+                } else {
+                    oDistance.left = oLeft;
+                }
+            } else {
+                
+            }
+
+            return oDistance;
         },
 
 

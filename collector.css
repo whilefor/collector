@@ -18,7 +18,7 @@
   z-index:-9999;
   background-color: #2E85DC;
   background: #FFF url('./img/congruent_outline.png') repeat;
-  background-size: 10%;
+  background-size: 1%;
 }
 .c-widget{
   position: absolute;
