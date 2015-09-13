@@ -1,7 +1,7 @@
  /**
  * collector.js v0.0.1
  *
- * Copyright (c) 2015-2015 Whilefor <whilefor@outlook.com>
+ * Copyright (c) 2015-2015 Whilefor <whilefore@gmail.com>
  * Open source under the MIT License.
  * while4.com
  */
@@ -80,37 +80,17 @@
             options = $.extend(defaultOptions.base, options);
         }
 
-        //----------------处理选择器-----------------//
-        //------暂时只支持匹配选择器的第一个元素-----//
+        //选择器
         if ($(selector).length > 0) {           //".collection" || "#collection"
             this._selector = selector;
-            //返回匹配指定选择器的第一个元素
             this.$targetElement = $($(selector).get(0));
         }
         else{
-            //单Node节点
-            //if (isElement(element)) {
-
-                // if (PointerEvent) {
-                //     events.add(this._element, pEventTypes.down, listeners.pointerDown );
-                //     events.add(this._element, pEventTypes.move, listeners.pointerHover);
-                // }
-                // else {
-                //     events.add(this._element, 'mousedown' , listeners.pointerDown );
-                //     events.add(this._element, 'mousemove' , listeners.pointerHover);
-                //     events.add(this._element, 'touchstart', listeners.pointerDown );
-                //     events.add(this._element, 'touchmove' , listeners.pointerHover);
-                // }
-            //}
-            //多Node节点
-            //if(isHTMLCollection(element)){
-
-            //}
         }
         this._options = options;
 
 
-        //----------------初始化-----------------//
+        //初始化
         if(this.$targetElement){
             this._init();
         }
@@ -433,14 +413,14 @@
             var maxTop  = dashboardHeight - targetHeight;
             var maxLeft = dashboardWidth - targetWidth;
             //出边界之后缓冲
-            var isBounds = this._boundsLimit({
+            var isBorder = this._isBorder({
                 target: $target,
                 top:  top,
                 left: left,
                 cHeight: dashboardHeight,
                 cWidth: dashboardWidth
             });
-            if(isBounds){
+            if(isBorder){
                 var moveRate = 0.2;
 
                 top = top > 0 ? top : top * moveRate;
@@ -511,7 +491,7 @@
             var cWidth = containerWidth * scaleRate;
 
             //防止dashboard出container边界
-            var isBounds = this._boundsLimit({
+            var isBorder = this._isBorder({
                 target: $target,
                 top:  top,
                 left: left,
@@ -519,8 +499,8 @@
                 cWidth: containerWidth * scaleRate 
             });
             //出边界之后缓冲
-            if(isBounds){
-                var moveRate = 0.1;
+            if(isBorder){
+                var moveRate = 0.05;  //出边界之后缓冲度
 
                 var topGap = targetHeight - cHeight;
                 top = top < 0 ? top : top * moveRate;
@@ -546,7 +526,7 @@
         //animation
         _animationStart: function(){
             //stop all animation
-            if(!this._isBounds){
+            if(!this._isReachBorder){
                 TweenMax.killAll();
             }
             //init animation
@@ -602,12 +582,11 @@
             var nearByDistanceRate = 0.005;            //距离边界多少百分比之后直接贴近
             this.perMoveX = Math.abs(this.perMoveX) > 500 ? 0: this.perMoveX;  //防止异常的速度
             this.perMoveY = Math.abs(this.perMoveY) > 500 ? 0: this.perMoveY;
-            console.log(this.perMoveX, this.perMoveY);
             var oLeft = parseInt($target.css('left')) + this.perMoveX * inertiaDecelerateSpeed * scaleRate;
             var oTop  = parseInt($target.css('top'))  + this.perMoveY * inertiaDecelerateSpeed * scaleRate;
             if(!isDashboard){
                 //接近边界之后直接贴边效果
-                var oDistance = this._toBoundsDistance({   //惯性移动后离边界的距离
+                var oDistance = this._toBorderDistance({   //惯性移动后离边界的距离
                         target:  $target, oTop:    oTop,    oLeft:   oLeft,
                         cHeight: cHeight, cWidth:  cWidth,
                         perMoveX: this.perMoveX, perMoveY: this.perMoveY
@@ -634,17 +613,15 @@
                 return;
             }
 
-
-
             //移动出边界之后惯性动画复位
             var decelerateTime = isDashboard ? 0.1 : 0.2;  //出边界之后惯性移动减速到静止的时间
             var accelerateTime = isDashboard ? 0.1 : 0.2;  //出边界之后惯性移动加速到静止的时间
             var resetEasingType = Power2.easeOut;          //复位移动动画曲线
-            var resetSpeed = 2;  //出边界之后惯性移动距离
-            var isBounds; self._isBounds = false;
+            var resetSpeed = isDashboard ? 0.01 : 2;       //出边界之后惯性移动距离
+            var isBorder; self._isReachBorder = false;
             this._ineria.eventCallback('onUpdate', function(){
-                if(isBounds){
-                    self._isBounds = true;
+                if(isBorder){
+                    self._isReachBorder = true;
                     var cTop = parseInt($target.css('top')) ;
                     var cLeft = parseInt($target.css('left'));
                     // var cTop = parseInt($target.css('top')) > 0 ? parseInt($target.css('top')) : 0;
@@ -688,14 +665,14 @@
 
                     return;
                 }
-                isBounds = self._boundsLimit({
+                isBorder = self._isBorder({
                     target: $target,
                     cHeight: cHeight,
                     cWidth: cWidth
                 });
             });
         },
-        _boundsLimit: function(option){
+        _isBorder: function(option){
             var $target = option.target,
                 top     = option.top || parseInt($target.css('top')),
                 left    = option.left || parseInt($target.css('left')),
@@ -752,7 +729,7 @@
                 }
             }
         },
-        _toBoundsDistance: function(option){
+        _toBorderDistance: function(option){
             var oTop = option.oTop,
                 oLeft = option.oLeft,
                 cHeight = option.cHeight,
@@ -946,78 +923,6 @@
             };
     }
 
-    function boundsLimit(option) {
-        var $target = option.target,
-            top     = option.top || parseInt($target.css('top')),
-            left    = option.left || parseInt($target.css('left')),
-            maxTop  = option.maxTop,
-            maxLeft = option.maxLeft,
-            cHeight = option.cHeight,
-            cWidth  = option.cWidth;
-
-        var targetWidth = parseInt($target.width());
-        var targetHeight = parseInt($target.height());
-
-
-        var isBounds; // 1 is, 2 not 
-        //目标元素高度小于容器高度
-        if (targetHeight < cHeight) {
-            if (top > 0) {
-                (top + targetHeight) >= cHeight
-                    ? $target.css('top', maxTop + "px")
-                    //? TweenMax.to($target, 1, { ease: Back.easeOut.config(1.7), left: maxLeft,top: maxTop });
-                    : $target.css('top', top + "px");
-                    isBounds = false;
-            } else {
-                if(isBounds){
-                TweenMax.to($target, 1, { ease: Back.easeOut.config(3.7), top: '0px' })
-                    .eventCallback('onComplete', function(){
-                        isBounds = false;
-                    });
-                }
-                
-                
-
-                // if(isBounds){
-                //     TweenMax.to($target, 1, { ease: Back.easeOut.config(1.7), top: '0px' });
-                // }
-                //$target.css('top', "0px");
-            }
-        } else {
-            if (top > 0) {
-                $target.css('top', "0px");
-            } else {
-                if ((Math.abs(top) + cHeight) > targetHeight) {
-                    $target.css('top', -(targetHeight - cHeight) + 'px');
-                } else {
-                    $target.css('top', top + "px");
-                }
-            }
-        }
-         //目标元素宽度小于容器宽度
-        if (targetWidth < cWidth) {
-            if (left > 0) {
-                (left + targetWidth) >= cWidth
-                    ? $target.css('left', maxLeft + "px") : $target.css('left', left + "px");
-            } else {
-                if(!TweenMax.isActive()){
-                    TweenMax.to($target, 1, { ease: Back.easeOut.config(3.7), left: '0px' });
-                }
-                //TweenMax.to($target, 1, { ease: Back.easeOut.config(1.7), left: '0px' });
-                //$target.css('left', "0px");
-            }
-        } else {
-            if (left > 0) {
-                $target.css('left', "0px");
-            } else {
-                if ((Math.abs(left) + cWidth) > targetWidth) {
-                    $target.css('left', -(targetWidth - cWidth) + 'px');
-                } else {
-                    $target.css('left', left + "px");
-                }
-            }
-        }
-    }
 
 
     function isElement (obj) {
