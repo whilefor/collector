@@ -438,6 +438,11 @@
             }
         },
         _onWidgetDragend: function(event){
+            var date = new Date();
+            if(date - this.lastDragTime > 50){
+                this.perMoveX = 0;
+                this.perMoveY = 0; 
+            }
             document.onmouseup = document.onmousemove = null;
             this._animationUpdate();
         },
@@ -519,6 +524,11 @@
             }
         },
         _onDashboardDragend: function(event){
+            var date = new Date();
+            if(date - this.lastDragTime > 50){
+                this.perMoveX = 0;
+                this.perMoveY = 0; 
+            }
             document.onmouseup = document.onmousemove = null;
             this._animationUpdate({'isDashboard': true});
         },
@@ -542,8 +552,11 @@
 
             this.perMoveX = (mouseLeft - this.lastX);  
             this.perMoveY = (mouseTop - this.lastY);
+
             this.lastX = mouseLeft;
             this.lastY = mouseTop;
+
+            this.lastDragTime = new Date();
         },
         _animationUpdate: function(option){
             var isDashboard = option && option.isDashboard;
@@ -580,8 +593,11 @@
             var inertiaDecelerateSpeed = 20;           //拖拽后惯性移动减速度，数字越大移动越大
             var inertiaEasingType = Power2.easeOut;    //惯性移动动画曲线
             var nearByDistanceRate = 0.005;            //距离边界多少百分比之后直接贴近
-            this.perMoveX = Math.abs(this.perMoveX) > 500 ? 0: this.perMoveX;  //防止异常的速度
+            //防止异常的速度
+            this.perMoveX = Math.abs(this.perMoveX) > 500 ? 0: this.perMoveX;
             this.perMoveY = Math.abs(this.perMoveY) > 500 ? 0: this.perMoveY;
+            console.log(this.perMoveX, this.perMoveY);
+
             var oLeft = parseInt($target.css('left')) + this.perMoveX * inertiaDecelerateSpeed * scaleRate;
             var oTop  = parseInt($target.css('top'))  + this.perMoveY * inertiaDecelerateSpeed * scaleRate;
             if(!isDashboard){
@@ -597,7 +613,6 @@
                 if(oDistance.left > 0 && oDistance.left < cWidth * nearByDistanceRate){
                     oLeft = this.perMoveX < 0 ? 0 : cWidth;
                 }
-                console.log(this.perMoveY);
 
 
                 //小于阀值速度则贴近边界
@@ -633,7 +648,6 @@
                     //惯性减速
                     var oldTop  = parseInt($target.css('top'));
                     var oldLeft = parseInt($target.css('left'));
-                    console.log(cTop, cLeft);
                     TweenMax.to($target, decelerateTime, {ease: resetEasingType, left:oLeft,top:oTop})
                     .eventCallback('onComplete', function(){
                         var top  = parseInt($target.css('top'));
@@ -907,7 +921,7 @@
         //widget for test
         var widgets = '';
         for(i=0 ;i<10;i++){
-            widgets += '<div class="c-widget"></div>';
+            widgets += '<div class="c-widget mdl-card mdl-shadow--2dp"></div>';
         }
 
         //wapper

@@ -25,14 +25,11 @@ body{
   z-index:-9999;
   background-color: #2E85DC;
   background: #FFF url('./img/congruent_outline.png') repeat;
-  background-size: 1%;
+  background-size: 10%;
 }
 .c-widget{
   position: absolute;
   cursor: pointer;
-	width: 300px;
-	height: 300px;
-	background-color: #FFF;
 }
 .c-widget *{overflow: hidden;}
 .c-widget-menu{
