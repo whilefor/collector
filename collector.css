@@ -50,3 +50,15 @@ body{
 .c-widget-active{
   background-color: #123;
 }
+
+
+
+
+
+.c-widget-test{
+  position: absolute;
+  cursor: pointer;
+  width: 300px;
+  height: 300px;
+  background-color: #123;
+}

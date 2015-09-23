@@ -151,7 +151,11 @@
             this.$activeWidget = $(event.currentTarget);
 
             //active menu
-            var $menu = $("<div class='c-widget-menu'></div>");
+            var $menu = $("<div class='c-widget-menu'>" +
+                            // '<button class="mdl-button mdl-js-button mdl-button--raised"> ' +
+                            //     'button' +
+                            // "</button>" + 
+                        "</div>");
             $menu.css('transform', "scale(" + scaleRate + ")");
             this.$activeWidget.append($menu);
         },
@@ -285,6 +289,7 @@
             var $wapperElement = this.$wapperElement,
                 $dashboardElement = this.$dashboardElement,
                 $targetElement = this.$targetElement;
+
 
              //判断滚轮放大或缩小, 以scaleSize/10为单位放大或缩小
             if (delta > 0) {
@@ -522,6 +527,8 @@
                 $target.css('top',  top  + "px");
                 $target.css('left', left + "px");               
             }
+            // $target.css('top',  top  + "px");
+            // $target.css('left', left + "px");               
         },
         _onDashboardDragend: function(event){
             var date = new Date();
@@ -596,7 +603,7 @@
             //防止异常的速度
             this.perMoveX = Math.abs(this.perMoveX) > 500 ? 0: this.perMoveX;
             this.perMoveY = Math.abs(this.perMoveY) > 500 ? 0: this.perMoveY;
-            console.log(this.perMoveX, this.perMoveY);
+            //console.log(this.perMoveX, this.perMoveY);
 
             var oLeft = parseInt($target.css('left')) + this.perMoveX * inertiaDecelerateSpeed * scaleRate;
             var oTop  = parseInt($target.css('top'))  + this.perMoveY * inertiaDecelerateSpeed * scaleRate;
@@ -607,6 +614,7 @@
                         cHeight: cHeight, cWidth:  cWidth,
                         perMoveX: this.perMoveX, perMoveY: this.perMoveY
                 });
+               
                 if(oDistance.top > 0 && oDistance.top < cHeight * nearByDistanceRate){
                     oTop = this.perMoveY < 0 ? 0 : cHeight;
                 }
@@ -617,11 +625,13 @@
 
                 //小于阀值速度则贴近边界
                 if(oDistance.top <= 0 && Math.abs(this.perMoveY) <= inertiaThresholdSpeed){
-                    oTop = this.perMoveY < 0 ? 0 : cHeight;
+                    oTop = this.perMoveY <= 0 ? 0 : cHeight;
                 }
                 if(oDistance.left <= 0 && Math.abs(this.perMoveX) <= inertiaThresholdSpeed){
-                    oLeft = this.perMoveX < 0 ? 0 : cWidth;
+                    oLeft = this.perMoveX <= 0 ? 0 : cWidth;
                 }
+
+                //console.log(oTop,this.perMoveY, oLeft,this.perMoveX);
             }
             this._ineria = TweenMax.to($target, 1, {ease: inertiaEasingType, left: oLeft, top: oTop});
             if(!isInertiaAnimation){
@@ -921,7 +931,7 @@
         //widget for test
         var widgets = '';
         for(i=0 ;i<10;i++){
-            widgets += '<div class="c-widget mdl-card mdl-shadow--2dp"></div>';
+            widgets += '<div class="c-widget c-widget-test"></div>';
         }
 
         //wapper
