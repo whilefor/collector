@@ -341,7 +341,7 @@
 
             //css scale
             scaleRate = actDivision(1,this.scale);
-            $('.c-widget-menu').css('transform', "scale(" + scaleRate + ")");
+            //$('.c-widget-menu').css('transform', "scale(" + scaleRate + ")");
 
             //防止滚动后出边界
             var dashboardTop = parseInt($dashboardElement.css('top')) || 0;

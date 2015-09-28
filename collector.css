@@ -30,15 +30,18 @@ body{
 .c-widget{
   position: absolute;
   cursor: pointer;
+  background-color: #fff;
 }
 .c-widget *{overflow: hidden;}
 .c-widget-menu{
   position: absolute;
-  top:-10px;
-  left: -10px;
-  width: 30px;
-  height: 30px;
-  background-color: #F00;
+  top:-50px;
+  left: -50px;
+  width: 50px;
+  height: 50px;
+  border-radius: 25px;
+  -webkit-border-radius: 25px; 
+  background-color: #ff4081;
 }
 .c-dragover{
 
@@ -48,7 +51,8 @@ body{
 }
 
 .c-widget-active{
-  background-color: #123;
+  /*background-color: #123;*/
+  box-shadow: 0 0 15px rgba(0, 0, 0, 1);
 }
 
 
@@ -60,5 +64,4 @@ body{
   cursor: pointer;
   width: 300px;
   height: 300px;
-  background-color: #123;
 }
