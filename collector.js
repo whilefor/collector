@@ -106,6 +106,7 @@
             this.scaling = this._options.scaling;
             this.minScale = this._options.minScale;
             this.maxScale = this._options.maxScale;
+            
             var $targetElement = this.$targetElement;
 
             var width = this._options.width,
@@ -122,6 +123,7 @@
             //put the wapper element into the selected element
             this.$targetElement.append(collectorElements.wapperElement);
             this.$dashboardElement = $('.c-dashboard');
+            this.$widgetMenu = $('.c-widget-menu');
 
             //widget dragable
             $targetElement.on('mousewheel', this._onScale.bind(this));
@@ -143,21 +145,24 @@
             event.preventDefault();
             event.stopPropagation();
             var scaleRate = actDivision(1, this.scale);
+            var $widgetMenu = this.$widgetMenu;
+
             if(this.$activeWidget){
                 this.$activeWidget.removeClass('c-widget-active');
-                this.$activeWidget.find('.c-widget-menu').remove();
             }
             $(event.currentTarget).addClass('c-widget-active');
             this.$activeWidget = $(event.currentTarget);
 
             //active menu
-            var $menu = $("<div class='c-widget-menu'>" +
-                            // '<button class="mdl-button mdl-js-button mdl-button--raised"> ' +
-                            //     'button' +
-                            // "</button>" + 
-                        "</div>");
-            $menu.css('transform', "scale(" + scaleRate + ")");
-            this.$activeWidget.append($menu);
+            // var $menu = $("<div class='c-widget-menu'>" +
+            //                 // '<button class="mdl-button mdl-js-button mdl-button--raised"> ' +
+            //                 //     'button' +
+            //                 // "</button>" + 
+            //             "</div>");
+            // $menu.css('transform', "scale(" + scaleRate + ")");
+            $widgetMenu.html(this.$activeWidget.html());
+
+
         },
 
         //wigdet drop----------------------------------------------------------------------------------
@@ -931,11 +936,16 @@
         //widget for test
         var widgets = '';
         for(i=0 ;i<10;i++){
-            widgets += '<div class="c-widget c-widget-test"></div>';
+            widgets += '<div class="c-widget c-widget-test">'+ i +'</div>';
         }
 
         //wapper
         var $wapperElement = $(
+            '<div class="c-widget-menu">'+
+            '<div class="c-widget-size"></div>' + 
+            '<div class="c-widget-degree"></div>' + 
+            '<input class="mdl-slider mdl-js-slider" type="range" min="0" max="100" value="25" tabindex="0"/>'+ 
+            '</div>' + 
             '<div class="c-wapper" id="c-wapper" style="width:' + width + ';height:' + height + ';transform: scale(' + scale + ');">'+
                 '<div class="c-dashboard" id="c-dashboard"> '+
                     widgets +

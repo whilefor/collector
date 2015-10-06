@@ -34,13 +34,7 @@ body{
 }
 .c-widget *{overflow: hidden;}
 .c-widget-menu{
-  position: absolute;
-  top:-50px;
-  left: -50px;
-  width: 50px;
-  height: 50px;
-  border-radius: 25px;
-  -webkit-border-radius: 25px; 
+  padding: 5px 10px;
   background-color: #ff4081;
 }
 .c-dragover{
