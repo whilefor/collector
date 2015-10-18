@@ -101,6 +101,7 @@
     c.prototype = {
         _widgetsArray:[],
         $activeWidget:null,
+        _zIndex: 2000,
         _init: function (){
             this.scale = this._options.minScale;
             this.scaling = this._options.scaling;
@@ -152,17 +153,8 @@
             }
             $(event.currentTarget).addClass('c-widget-active');
             this.$activeWidget = $(event.currentTarget);
-
-            //active menu
-            // var $menu = $("<div class='c-widget-menu'>" +
-            //                 // '<button class="mdl-button mdl-js-button mdl-button--raised"> ' +
-            //                 //     'button' +
-            //                 // "</button>" + 
-            //             "</div>");
-            // $menu.css('transform', "scale(" + scaleRate + ")");
+            
             $widgetMenu.html(this.$activeWidget.html());
-
-
         },
 
         //wigdet drop----------------------------------------------------------------------------------
@@ -453,6 +445,7 @@
                 this.perMoveX = 0;
                 this.perMoveY = 0; 
             }
+            
             document.onmouseup = document.onmousemove = null;
             this._animationUpdate();
         },
@@ -551,6 +544,7 @@
             if(!this._isReachBorder){
                 TweenMax.killAll();
             }
+            this.lastDragTime = new Date();
             //init animation
             this.perMoveX = 0;  
             this.perMoveY = 0;
@@ -562,8 +556,12 @@
             var mouseLeft = event.clientX - this.offset_x;
             var mouseTop = event.clientY - this.offset_y;
 
+            if(this.lastX==0 && this.lastY==0){
+                return;
+            }
             this.perMoveX = (mouseLeft - this.lastX);  
             this.perMoveY = (mouseTop - this.lastY);
+
 
             this.lastX = mouseLeft;
             this.lastY = mouseTop;
@@ -942,9 +940,8 @@
         //wapper
         var $wapperElement = $(
             '<div class="c-widget-menu">'+
-            '<div class="c-widget-size"></div>' + 
-            '<div class="c-widget-degree"></div>' + 
-            '<input class="mdl-slider mdl-js-slider" type="range" min="0" max="100" value="25" tabindex="0"/>'+ 
+                '<div class="c-widget-size"><input class="mdl-slider mdl-js-slider" type="range" min="0" max="100" value="25" tabindex="0"/></div>' + 
+                '<div class="c-widget-degree"><input class="mdl-slider mdl-js-slider" type="range" min="0" max="100" value="25" tabindex="0"/></div>' + 
             '</div>' + 
             '<div class="c-wapper" id="c-wapper" style="width:' + width + ';height:' + height + ';transform: scale(' + scale + ');">'+
                 '<div class="c-dashboard" id="c-dashboard"> '+

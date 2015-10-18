@@ -37,6 +37,16 @@ body{
   padding: 5px 10px;
   background-color: #ff4081;
 }
+.c-widget-menu .c-widget-size{
+  display: inline-block;
+  width: 50%;
+}
+.c-widget-menu .c-widget-degree{
+  display: inline-block;
+  width: 50%;
+}
+
+
 .c-dragover{
 
 }
